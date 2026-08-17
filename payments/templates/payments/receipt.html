@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Payment Receipt | Cavendish University Zambia{% endblock %}
+{% block body_class %}scrollable{% endblock %}
+
+{% block content %}
+<div class="wide-payment-card">
+  <div class="card-header">
+    <img src="{% static 'images/cuz_logo.png' %}" alt="CUZ Logo" class="form-logo" />
+    <div class="header-text">
+      <h1>Payment Receipt</h1>
+      <p>Keep this reference for your records.</p>
+    </div>
+  </div>
+
+  <div class="summary-list">
+    <div class="summary-row">
+      <span class="label">Status</span>
+      <span class="value">
+        <span class="status-badge {{ payment.status|lower }}">{{ payment.get_status_display }}</span>
+      </span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Reference</span>
+      <span class="value">{{ payment.merchant_reference }}</span>
+    </div>
+    {% if payment.cybs_transaction_id %}
+    <div class="summary-row">
+      <span class="label">Transaction ID</span>
+      <span class="value">{{ payment.cybs_transaction_id }}</span>
+    </div>
+    {% endif %}
+    <div class="summary-row">
+      <span class="label">Student</span>
+      <span class="value">{{ payment.full_name }} ({{ payment.student_id }})</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Purpose</span>
+      <span class="value">{{ payment.get_purpose_display }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Date</span>
+      <span class="value">{{ payment.created_at|date:"d M Y, H:i" }}</span>
+    </div>
+    <div class="summary-row total">
+      <span class="label">Amount</span>
+      <span class="value">{{ payment.currency }} {{ payment.amount }}</span>
+    </div>
+  </div>
+
+  <div class="action-area">
+    <button type="button" class="pay-btn" onclick="window.print()">Print Receipt</button>
+    <a class="back-link" href="{% url 'payments:payment_form' %}">&larr; Make another payment</a>
+  </div>
+</div>
+{% endblock %}

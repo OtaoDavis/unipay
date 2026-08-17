@@ -1,0 +1,374 @@
+:root {
+  --cu-navy: #213769;
+  --cu-navy-dark: #17264d;
+  --cu-navy-light: rgba(33, 55, 105, 0.08);
+  --bg-gray: #f4f7f9;
+  --navbar-height: 150px; /* Adjust this to match the actual site header height */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: var(--bg-gray);
+  overflow: hidden; /* Prevents body scrolling on desktop */
+}
+
+.navbar-spacer {
+  height: var(--navbar-height);
+  width: 100%;
+}
+
+.page-container {
+  height: calc(100vh - var(--navbar-height));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.wide-payment-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 560px;
+  padding: 36px 44px 40px;
+  border-radius: 16px;
+  box-shadow: 0 20px 45px rgba(33, 55, 105, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-top: 6px solid var(--cu-navy);
+  position: relative;
+}
+
+/* Header Styles */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid #eef1f4;
+  padding-bottom: 20px;
+}
+
+.form-logo {
+  height: 48px;
+}
+
+.header-text h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--cu-navy);
+  margin: 0;
+}
+
+.header-text p {
+  font-size: 13px;
+  color: #8892a0;
+  margin-top: 2px;
+}
+
+/* Form Layout */
+.payment-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-bottom: 7px;
+  color: var(--cu-navy);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #dfe4ea;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #2c3444;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input::placeholder {
+  color: #b3bac4;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--cu-navy);
+  box-shadow: 0 0 0 4px var(--cu-navy-light);
+}
+
+/* Amount Styling */
+.amount-field {
+  margin-top: 4px;
+  margin-bottom: 26px;
+  text-align: center;
+}
+
+.amount-field label {
+  text-align: center;
+}
+
+.amount-group {
+  display: flex;
+  max-width: 320px;
+  margin: 0 auto;
+  border: 1.5px solid #dfe4ea;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.amount-group:focus-within {
+  border-color: var(--cu-navy);
+  box-shadow: 0 0 0 4px var(--cu-navy-light);
+}
+
+.amount-group input {
+  border: none;
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--cu-navy);
+}
+
+.amount-group input:focus {
+  box-shadow: none;
+}
+
+.amount-group select {
+  width: 112px;
+  padding: 12px 8px;
+  border: none;
+  border-left: 1.5px solid #dfe4ea;
+  background: #f7f8fa;
+  border-radius: 0;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--cu-navy);
+}
+
+.amount-group select:focus {
+  box-shadow: none;
+}
+
+/* Button & Footer Area */
+.action-area {
+  margin-top: 6px;
+}
+
+.pay-btn {
+  background: linear-gradient(135deg, var(--cu-navy), var(--cu-navy-dark));
+  color: white;
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(33, 55, 105, 0.28);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pay-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(33, 55, 105, 0.34);
+}
+
+.pay-btn:active {
+  transform: translateY(0);
+}
+
+.secure-tag {
+  text-align: center;
+  font-size: 11.5px;
+  color: #a1a8b3;
+  margin-top: 12px;
+}
+
+/* --- RESPONSIVITY --- */
+
+/* 24-inch Monitor (Wide spacing) */
+@media screen and (min-width: 1600px) {
+  .wide-payment-card {
+    max-width: 620px;
+    padding: 44px 56px 48px;
+  }
+}
+
+/* Small Laptops (Thinkpad/Asus) */
+@media screen and (max-height: 800px) {
+  .navbar-spacer {
+    height: 120px;
+  }
+  .wide-payment-card {
+    padding: 24px 32px 28px;
+  }
+  .card-header {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+  }
+  .form-group {
+    margin-bottom: 12px;
+  }
+  .amount-field {
+    margin-bottom: 18px;
+  }
+}
+
+/* Mobile (Back to vertical + allow scrolling) */
+@media screen and (max-width: 768px) {
+  body {
+    overflow: auto;
+  }
+  .page-container {
+    height: auto;
+  }
+  .name-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .card-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  .wide-payment-card {
+    margin: 20px 0;
+  }
+}
+
+/* --- DJANGO FORM ADDITIONS --- */
+
+.field-error {
+  color: #c0392b;
+  font-size: 11.5px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.form-alert {
+  background: #fdecea;
+  border-left: 4px solid #c0392b;
+  color: #922b21;
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+/* Django adds no class on invalid fields by default; these are set in forms.py
+   via the errors loop wrapper, so we target the group instead. */
+.form-group input.has-error,
+.form-group select.has-error {
+  border-color: #c0392b;
+}
+
+/* Read-only summary rows used on the checkout + receipt pages */
+.summary-list {
+  border: 1px solid #eef1f4;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  border-bottom: 1px solid #eef1f4;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row .label {
+  color: #8892a0;
+  font-weight: 500;
+}
+
+.summary-row .value {
+  color: #2c3444;
+  font-weight: 600;
+  text-align: right;
+}
+
+.summary-row.total {
+  background: var(--cu-navy-light);
+}
+
+.summary-row.total .value {
+  color: var(--cu-navy);
+  font-size: 17px;
+}
+
+/* Container that Unified Checkout renders into */
+#embedded-payment {
+  min-height: 220px;
+  margin-bottom: 20px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: #8892a0;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--cu-navy);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.status-badge.authorized { background: #e8f6ee; color: #1e7d47; }
+.status-badge.pending    { background: #fdf3e2; color: #9a6b12; }
+.status-badge.declined   { background: #fdecea; color: #c0392b; }
+
+/* The checkout page can grow taller than the viewport once the card iframe
+   loads, so scrolling must be allowed there. */
+body.scrollable {
+  overflow: auto;
+}
+
+body.scrollable .page-container {
+  height: auto;
+  min-height: calc(100vh - var(--navbar-height));
+}
