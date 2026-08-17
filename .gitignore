@@ -24,4 +24,3 @@ env/
 .coverage
 htmlcov/
 DEPLOY.md
-SETUP.md
