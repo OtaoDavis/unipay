@@ -23,4 +23,5 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
-*.md
+DEPLOY.md
+SETUP.md
