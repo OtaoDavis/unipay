@@ -60,18 +60,17 @@ class Command(BaseCommand):
                 self.stdout.write(f"  {self.style.ERROR('FAIL')}  {slug:<8} {message}")
 
         self.stdout.write("")
-        self.stdout.write(self.style.MIGRATE_HEADING("Effective routing"))
-        currencies = cybersource.supported_currencies()
-        if not currencies:
+        self.stdout.write(self.style.MIGRATE_HEADING("Currencies per bank"))
+        banks = cybersource.available_banks()
+        if not banks:
             ok = False
-            self.stdout.write(self.style.ERROR("  No currencies are configured."))
-        for currency in currencies:
-            try:
-                account = cybersource.get_account_for_currency(currency)
-                self.stdout.write(f"  {currency} -> {account.slug}")
-            except Exception as exc:
+            self.stdout.write(self.style.ERROR("  No banks are configured."))
+        for bank in banks:
+            if not bank["currencies"]:
                 ok = False
-                self.stdout.write(f"  {self.style.ERROR('FAIL')}  {currency} -> {exc}")
+                self.stdout.write(f"  {self.style.ERROR('FAIL')}  {bank['slug']:<8} no currencies configured")
+            else:
+                self.stdout.write(f"  {bank['slug']:<8} {', '.join(bank['currencies'])}")
 
         self.stdout.write("")
         if ok:

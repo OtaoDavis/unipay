@@ -5,7 +5,7 @@ from . import views
 app_name = "payments"
 
 urlpatterns = [
-    path("", views.payment_form, name="payment_form"),
+    path("", views.choose_bank, name="choose_bank"),
     path("checkout/<uuid:reference>/", views.checkout, name="checkout"),
     path(
         "checkout/<uuid:reference>/complete/",
@@ -13,4 +13,7 @@ urlpatterns = [
         name="complete_payment",
     ),
     path("receipt/<uuid:reference>/", views.receipt, name="receipt"),
+    # Kept last: a bare "<bank>/" would otherwise shadow the more specific
+    # routes above for malformed URLs (e.g. "/pay/checkout/" with no reference).
+    path("<slug:bank>/", views.payment_form, name="payment_form"),
 ]

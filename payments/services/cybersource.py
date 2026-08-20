@@ -42,6 +42,7 @@ class MerchantAccount:
     key_id: str
     shared_secret: str
     host: str
+    currencies: tuple = ()
 
     @property
     def base_url(self):
@@ -117,34 +118,25 @@ def get_account(slug):
         key_id=data.get("KEY_ID", ""),
         shared_secret=data.get("SHARED_SECRET", ""),
         host=get_host(),
+        currencies=tuple(data.get("CURRENCIES", ())),
     )
 
 
-def get_account_for_currency(currency):
-    """Pick the merchant account that settles this currency.
-
-    This is the routing rule: a ZMW payment must go to the acquirer that can
-    actually settle ZMW. Sending it to the wrong MID gets it declined, or
-    worse, authorized and then rejected at settlement.
+def available_banks():
+    """Banks a student can choose to pay through, each with the currencies
+    it supports. Drives the bank-choice page and the currency dropdown on
+    the details page — add a bank to ACCOUNTS in settings and it shows up
+    here with no other changes.
     """
-    conf = _config()
-    routing = conf.get("CURRENCY_ROUTING", {})
-
-    slug = routing.get(currency.upper())
-    if not slug:
-        raise ImproperlyConfigured(
-            f"No CyberSource account is configured to handle {currency}. "
-            f"Set CYBS_ACCOUNT_FOR_{currency.upper()} in your .env file."
-        )
-
-    account = get_account(slug)
-    account.validate()
-    return account
-
-
-def supported_currencies():
-    """Currencies with a routing rule — use this to build the dropdown."""
-    return sorted(_config().get("CURRENCY_ROUTING", {}))
+    accounts = _config().get("ACCOUNTS", {})
+    return [
+        {
+            "slug": slug,
+            "label": data.get("LABEL", slug.title()),
+            "currencies": list(data.get("CURRENCIES", ())),
+        }
+        for slug, data in accounts.items()
+    ]
 
 
 def validate_all():
@@ -235,13 +227,14 @@ def _call(account, method, path, payload=None):
     return response
 
 
-def create_capture_context(payment, target_origin):
+def create_capture_context(payment, target_origin, account):
     """Ask CyberSource for a capture context JWT for one payment.
 
     The JWT is handed to the Unified Checkout JS SDK in the browser; it
-    scopes that session to this amount/currency/origin only.
+    scopes that session to this amount/currency/origin only. `account` is
+    the bank the student explicitly chose (payment.bank), resolved by the
+    caller so there's a single source of truth for routing.
     """
-    account = get_account_for_currency(payment.currency)
     payload = {
         "targetOrigins": [target_origin],
         "clientVersion": "0.23",

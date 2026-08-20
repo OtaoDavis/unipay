@@ -1,7 +1,7 @@
 import logging
 
 from django.core.exceptions import ImproperlyConfigured
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -19,21 +19,43 @@ logger = logging.getLogger(__name__)
 AUTHORIZED_STATUSES = {"AUTHORIZED", "COMPLETED", "ACCEPT", "ACCEPTED"}
 
 
-def payment_form(request):
-    """Step 1 - collect student details and the amount.
+def choose_bank(request):
+    """Step 1 - the student picks which bank to pay through.
+
+    Currency is a separate choice made on the next page -- either bank can
+    settle either currency, so this step is purely about settlement.
+    """
+    return render(
+        request, "payments/choose_bank.html", {"banks": cybersource.available_banks()}
+    )
+
+
+def payment_form(request, bank):
+    """Step 2 - collect student details, currency, and the amount.
 
     The Payment row is written as PENDING *before* CyberSource is ever
     contacted, so there is always a local record even if the API call fails.
     """
+    banks_by_slug = {b["slug"]: b for b in cybersource.available_banks()}
+    if bank not in banks_by_slug:
+        raise Http404("Unknown bank.")
+    bank_info = banks_by_slug[bank]
+
+    instance = Payment(bank=bank)
+
     if request.method == "POST":
-        form = PaymentDetailsForm(request.POST)
+        form = PaymentDetailsForm(
+            request.POST, instance=instance, currencies=bank_info["currencies"]
+        )
         if form.is_valid():
             payment = form.save()
             return redirect("payments:checkout", reference=payment.reference)
     else:
-        form = PaymentDetailsForm()
+        form = PaymentDetailsForm(instance=instance, currencies=bank_info["currencies"])
 
-    return render(request, "payments/payment_form.html", {"form": form})
+    return render(
+        request, "payments/payment_form.html", {"form": form, "bank": bank_info}
+    )
 
 
 def checkout(request, reference):
@@ -52,7 +74,9 @@ def checkout(request, reference):
     capture_context = None
     config_error = None
     try:
-        capture_context = cybersource.create_capture_context(payment, target_origin)
+        account = cybersource.get_account(payment.bank)
+        account.validate()
+        capture_context = cybersource.create_capture_context(payment, target_origin, account)
     except (ImproperlyConfigured, CyberSourceError) as exc:
         config_error = str(exc)
 
@@ -87,7 +111,7 @@ def complete_payment(request, reference):
         return JsonResponse({"error": "Missing payment result."}, status=400)
 
     try:
-        account = cybersource.get_account_for_currency(payment.currency)
+        account = cybersource.get_account(payment.bank)
         result = cybersource.verify_unified_checkout_jwt(result_jwt, account)
     except (ImproperlyConfigured, CyberSourceError) as exc:
         return JsonResponse({"error": str(exc)}, status=502)

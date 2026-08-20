@@ -9,7 +9,7 @@ Portal | Cavendish University Zambia{% endblock %} {% block content %}
     />
     <div class="header-text">
       <h1>Student Payment Portal</h1>
-      <p>Complete your transaction securely below.</p>
+      <p>Paying via {{ bank.label }}.</p>
     </div>
   </div>
 
@@ -23,7 +23,7 @@ Portal | Cavendish University Zambia{% endblock %} {% block content %}
 
   <form
     method="post"
-    action="{% url 'payments:payment_form' %}"
+    action="{% url 'payments:payment_form' bank=bank.slug %}"
     class="payment-form"
     novalidate
   >
@@ -72,6 +72,7 @@ Portal | Cavendish University Zambia{% endblock %} {% block content %}
     <div class="action-area">
       <button type="submit" class="pay-btn">Proceed to Payment</button>
       <!-- <p class="secure-tag">&#128274; SSL Secure Transaction</p> -->
+      <a class="back-link" href="{% url 'payments:choose_bank' %}">&larr; Choose a different bank</a>
     </div>
   </form>
 </div>

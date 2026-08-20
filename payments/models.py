@@ -31,6 +31,12 @@ class Payment(models.Model):
     student_id = models.CharField(max_length=32, db_index=True)
     purpose = models.CharField(max_length=32, choices=Purpose.choices)
 
+    # Slug into settings.CYBERSOURCE["ACCOUNTS"] (e.g. "zanaco", "absa") --
+    # chosen explicitly by the student on the bank-choice page, not inferred
+    # from currency. Not a model-level enum on purpose: adding a bank is a
+    # settings.py change only, per cybersource.available_banks().
+    bank = models.CharField(max_length=32, db_index=True)
+
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(
         max_length=3, choices=Currency.choices, default=Currency.ZMW

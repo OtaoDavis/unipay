@@ -10,12 +10,13 @@ class PaymentAdmin(admin.ModelAdmin):
         "student_id",
         "full_name",
         "purpose",
+        "bank",
         "amount",
         "currency",
         "status",
         "created_at",
     )
-    list_filter = ("status", "currency", "purpose", "created_at")
+    list_filter = ("status", "bank", "currency", "purpose", "created_at")
     search_fields = ("student_id", "first_name", "last_name", "cybs_transaction_id")
     readonly_fields = (
         "reference",

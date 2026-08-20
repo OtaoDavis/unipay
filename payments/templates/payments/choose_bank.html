@@ -1,0 +1,31 @@
+{% extends "base.html" %} {% load static %} {% block title %}Choose a Bank |
+Cavendish University Zambia{% endblock %} {% block content %}
+<div class="wide-payment-card">
+  <div class="card-header">
+    <img
+      src="{% static 'images/cuz_logo.png' %}"
+      alt="CUZ Logo"
+      class="form-logo"
+    />
+    <div class="header-text">
+      <h1>Student Payment Portal</h1>
+      <p>Choose which bank you'd like to make your payment through.</p>
+    </div>
+  </div>
+
+  <div class="bank-choice-list">
+    {% for bank in banks %}
+    <a
+      href="{% url 'payments:payment_form' bank=bank.slug %}"
+      class="bank-choice-card"
+    >
+      <span class="bank-choice-name">{{ bank.label }}</span>
+    </a>
+    {% empty %}
+    <p class="form-alert">
+      No payment accounts are configured yet. Please contact the Finance Office.
+    </p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

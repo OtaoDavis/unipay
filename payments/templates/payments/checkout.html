@@ -52,7 +52,7 @@
 
   <div class="action-area">
     <p class="secure-tag">&#128274; Card details are entered directly with our payment provider.</p>
-    <a class="back-link" href="{% url 'payments:payment_form' %}">&larr; Change details</a>
+    <a class="back-link" href="{% url 'payments:payment_form' bank=payment.bank %}">&larr; Change details</a>
   </div>
 </div>
 {% endblock %}

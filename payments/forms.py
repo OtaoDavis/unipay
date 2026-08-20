@@ -46,13 +46,16 @@ class PaymentDetailsForm(forms.ModelForm):
             "currency": forms.Select(),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, currencies=None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Currency sits inside the amount box, so a blank option would look
-        # broken. Default to ZMW and drop the empty choice.
-        self.fields["currency"].choices = Payment.Currency.choices
-        self.fields["currency"].initial = Payment.Currency.ZMW
+        # Currency options are scoped to whichever bank the student already
+        # picked -- passed in by the view, not tied to the model globally.
+        currencies = currencies or [c for c, _ in Payment.Currency.choices]
+        self.fields["currency"].choices = [
+            (code, label) for code, label in Payment.Currency.choices if code in currencies
+        ]
+        self.fields["currency"].initial = currencies[0]
 
         self.fields["purpose"].choices = [("", "Select purpose of payment")] + list(
             Payment.Purpose.choices

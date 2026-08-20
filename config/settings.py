@@ -166,20 +166,16 @@ CYBERSOURCE = {
             "MERCHANT_ID": os.getenv("CYBS_ZANACO_MERCHANT_ID", ""),
             "KEY_ID": os.getenv("CYBS_ZANACO_KEY_ID", ""),
             "SHARED_SECRET": os.getenv("CYBS_ZANACO_SHARED_SECRET", ""),
+            # Currency is NOT tied to a bank -- either bank can settle either
+            # currency. This just lists what each one supports.
+            "CURRENCIES": ["ZMW", "USD"],
         },
         "absa": {
             "LABEL": "Absa",
             "MERCHANT_ID": os.getenv("CYBS_ABSA_MERCHANT_ID", ""),
             "KEY_ID": os.getenv("CYBS_ABSA_KEY_ID", ""),
             "SHARED_SECRET": os.getenv("CYBS_ABSA_SHARED_SECRET", ""),
+            "CURRENCIES": ["ZMW", "USD"],
         },
-    },
- 
-    # Which account handles which currency. This drives BOTH the payment
-    # routing and the currency dropdown on the form — a currency with no
-    # route here simply won't be offered to students.
-    "CURRENCY_ROUTING": {
-        "ZMW": os.getenv("CYBS_ACCOUNT_FOR_ZMW", ""),
-        "USD": os.getenv("CYBS_ACCOUNT_FOR_USD", ""),
     },
 }
