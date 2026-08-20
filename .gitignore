@@ -12,6 +12,7 @@ __pycache__/
 staticfiles/
 media/
 *.log
+logs/
 .DS_Store
 Thumbs.db
 .idea/

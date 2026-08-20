@@ -218,8 +218,8 @@ def _call(account, method, path, payload=None):
 
     url = f"{account.base_url}{path}"
     logger.info(
-        "CyberSource request: %s %s (account=%s) body=%s",
-        method, url, account.slug, body_bytes.decode("utf-8") if body_bytes else None,
+        "CyberSource request: %s",
+        json.dumps({"method": method, "url": url, "account": account.slug, "body": payload}),
     )
 
     try:
@@ -233,9 +233,20 @@ def _call(account, method, path, payload=None):
     except requests.RequestException as exc:
         raise CyberSourceError(f"Could not reach CyberSource: {exc}") from exc
 
+    try:
+        response_body = response.json()
+    except ValueError:
+        response_body = response.text
+
     logger.info(
-        "CyberSource response: %s %s -> %s body=%s",
-        method, url, response.status_code, response.text,
+        "CyberSource response: %s",
+        json.dumps({
+            "method": method,
+            "url": url,
+            "account": account.slug,
+            "status_code": response.status_code,
+            "body": response_body,
+        }),
     )
 
     return response
