@@ -10,6 +10,7 @@ import binascii
 import hashlib
 import hmac
 import json
+import logging
 from dataclasses import dataclass
 from email.utils import formatdate
 
@@ -17,6 +18,8 @@ import jwt
 import requests
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+
+logger = logging.getLogger(__name__)
 
 # CyberSource API hosts. Sandbox and production are entirely separate
 # accounts: test credentials will not work against the production host.
@@ -213,16 +216,27 @@ def _call(account, method, path, payload=None):
     headers["Content-Type"] = "application/json"
     headers["Accept"] = "application/json"
 
+    url = f"{account.base_url}{path}"
+    logger.info(
+        "CyberSource request: %s %s (account=%s) body=%s",
+        method, url, account.slug, body_bytes.decode("utf-8") if body_bytes else None,
+    )
+
     try:
         response = requests.request(
             method,
-            f"{account.base_url}{path}",
+            url,
             headers=headers,
             data=body_bytes,
             timeout=REQUEST_TIMEOUT,
         )
     except requests.RequestException as exc:
         raise CyberSourceError(f"Could not reach CyberSource: {exc}") from exc
+
+    logger.info(
+        "CyberSource response: %s %s -> %s body=%s",
+        method, url, response.status_code, response.text,
+    )
 
     return response
 

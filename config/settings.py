@@ -154,6 +154,21 @@ MAILERS = {
     },
 }
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "loggers": {
+        "payments": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
 CYBERSOURCE = {
     # "test" -> apitest.cybersource.com, "production" -> api.cybersource.com
     "ENVIRONMENT": os.getenv("CYBS_ENVIRONMENT", "test"),
