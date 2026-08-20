@@ -206,15 +206,22 @@ def _signature_headers(account, method, path, body_bytes):
     return headers
 
 
-def _call(account, method, path, payload=None):
-    """POST/GET a CyberSource REST endpoint with a signed request."""
+def _call(account, method, path, payload=None, accept="application/json"):
+    """POST/GET a CyberSource REST endpoint with a signed request.
+
+    `accept` is endpoint-specific, not a global default: /pts/v2/payments
+    returns HAL responses and rejects anything but "application/hal+json"
+    with an opaque 404 (see direct_test_authorization), while endpoints like
+    /flex/v2/public-keys reject that same value with a 406. There is no one
+    Accept value that works everywhere.
+    """
     body_bytes = None
     if payload is not None:
         body_bytes = json.dumps(payload, separators=(",", ":")).encode("utf-8")
 
     headers = _signature_headers(account, method, path, body_bytes)
     headers["Content-Type"] = "application/json"
-    headers["Accept"] = "application/json"
+    headers["Accept"] = accept
 
     url = f"{account.base_url}{path}"
     logger.info(
@@ -288,6 +295,48 @@ def create_capture_context(payment, target_origin, account):
             f"capture-contexts request failed ({response.status_code}): {response.text}"
         )
     return response.text.strip()
+
+
+def direct_test_authorization(account, amount="10.00", currency="ZMW"):
+    """Call the Payments API directly with a plain test card, bypassing
+    Unified Checkout and the browser entirely.
+
+    Only useful for diagnosing whether a merchant account has a working
+    processing/acquiring connection at all -- CyberSource's own test card,
+    not real card data. Not part of the normal payment flow.
+    """
+    payload = {
+        "clientReferenceInformation": {"code": "diagnostic-test"},
+        "paymentInformation": {
+            "card": {
+                "number": "4111111111111111",
+                "expirationMonth": "12",
+                "expirationYear": "2027",
+                "securityCode": "123",
+            }
+        },
+        "orderInformation": {
+            "amountDetails": {"totalAmount": str(amount), "currency": currency},
+            "billTo": {
+                "firstName": "Test",
+                "lastName": "Student",
+                "address1": "1 Test Street",
+                "locality": "Lusaka",
+                "administrativeArea": "LU",
+                "postalCode": "10101",
+                "country": "ZM",
+                "email": "test@example.com",
+                "phoneNumber": "0000000000",
+            },
+        },
+    }
+
+    response = _call(account, "POST", "/pts/v2/payments", payload, accept="application/hal+json")
+    try:
+        body = response.json()
+    except ValueError:
+        body = response.text
+    return response.status_code, body
 
 
 def get_public_key(kid, account):
