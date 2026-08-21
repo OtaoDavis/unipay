@@ -46,6 +46,7 @@
     </div>
   {% else %}
     <!-- CyberSource Unified Checkout mounts here. -->
+    <div id="payment-selection"></div>
     <div id="embedded-payment"></div>
     <p id="checkout-error" class="alert alert-error" hidden></p>
   {% endif %}
@@ -59,13 +60,14 @@
 
 {% block extra_js %}
 {% if not config_error %}
-<script src="{{ cybersource_js_url }}"></script>
+<script src="{{ client_library }}" integrity="{{ client_library_integrity }}" crossorigin="anonymous"></script>
 <script>
 (function () {
   var errorBox = document.getElementById("checkout-error");
   var csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
   var completeUrl = "{% url 'payments:complete_payment' payment.reference %}";
   var receiptUrl = "{% url 'payments:receipt' payment.reference %}";
+  var captureContext = "{{ capture_context|escapejs }}";
 
   function showError(message) {
     errorBox.textContent = message;
@@ -73,11 +75,18 @@
   }
 
   async function launchCheckout() {
-    var client, checkout;
+    var accept;
     try {
-      client = await VAS.UnifiedCheckout("{{ capture_context|escapejs }}");
-      checkout = await client.createCheckout({ autoProcessing: true });
-      var resultJwt = await checkout.mount("#embedded-payment");
+      accept = await Accept(captureContext);
+      var up = await accept.unifiedPayments(false);
+      var showArgs = {
+        containers: {
+          paymentSelection: "#payment-selection",
+          paymentScreen: "#embedded-payment",
+        },
+      };
+      var transientToken = await up.show(showArgs);
+      var completeResponse = await up.complete(transientToken);
 
       var response = await fetch(completeUrl, {
         method: "POST",
@@ -85,7 +94,7 @@
           "X-CSRFToken": csrfToken,
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: "payment_result=" + encodeURIComponent(resultJwt),
+        body: "payment_result=" + encodeURIComponent(JSON.stringify(completeResponse)),
       });
       var data = await response.json();
 
@@ -100,8 +109,7 @@
           "Something went wrong loading the payment form. Please refresh and try again."
       );
     } finally {
-      if (checkout) checkout.destroy();
-      if (client) client.destroy();
+      if (accept) accept.dispose();
     }
   }
 

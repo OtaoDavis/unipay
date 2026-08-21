@@ -14,7 +14,6 @@ import logging
 from dataclasses import dataclass
 from email.utils import formatdate
 
-import jwt
 import requests
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -159,9 +158,28 @@ def validate_all():
     return results
 
 
-def get_unified_checkout_js_url():
-    """CDN URL for the Unified Checkout front-end SDK, same host as the API."""
-    return f"https://{get_host()}/uc/v1/assets/1.0.0/UnifiedCheckout.js"
+def extract_client_library(capture_context):
+    """Pull clientLibrary/clientLibraryIntegrity out of a capture context JWT.
+
+    CyberSource's own docs are explicit that these must come from each
+    capture context response, never be hardcoded -- the JS bundle path is
+    versioned per-request. This only reads the JWT's payload (no signature
+    check) because it's used purely to pick which <script> tag to load, not
+    for any trust decision.
+    """
+    try:
+        payload_segment = capture_context.split(".")[1]
+        padded = payload_segment + "=" * (-len(payload_segment) % 4)
+        data = json.loads(base64.urlsafe_b64decode(padded))
+    except (IndexError, ValueError, binascii.Error) as exc:
+        raise CyberSourceError(f"Could not parse capture context JWT: {exc}") from exc
+
+    for entry in data.get("ctx", []):
+        library = entry.get("data", {}).get("clientLibrary")
+        if library:
+            return library, entry["data"].get("clientLibraryIntegrity")
+
+    raise CyberSourceError("Capture context JWT has no clientLibrary field.")
 
 
 def _signature_headers(account, method, path, body_bytes):
@@ -269,7 +287,7 @@ def create_capture_context(payment, target_origin, account):
     """
     payload = {
         "targetOrigins": [target_origin],
-        "clientVersion": "0.23",
+        "clientVersion": "0.28",
         "allowedCardNetworks": ["VISA", "MASTERCARD", "AMEX"],
         "allowedPaymentTypes": ["PANENTRY"],
         "country": "ZM",
@@ -286,6 +304,13 @@ def create_capture_context(payment, target_origin, account):
                 "totalAmount": str(payment.amount),
                 "currency": payment.currency,
             }
+        },
+        # Required for unifiedPayments.complete() to be allowed to run at
+        # all -- without this, CyberSource's own widget refuses to complete
+        # the payment ("Complete not allowed for this transaction"), no
+        # matter how the merchant account is otherwise configured.
+        "completeMandate": {
+            "type": "CAPTURE",
         },
     }
 
@@ -339,41 +364,3 @@ def direct_test_authorization(account, amount="10.00", currency="ZMW"):
     return response.status_code, body
 
 
-def get_public_key(kid, account):
-    """Fetch the RSA public key (JWK) CyberSource used to sign a JWT.
-
-    Used to verify Unified Checkout's autoProcessing "completed payment
-    result" JWT — the kid in the JWT header identifies which key to fetch.
-    """
-    response = _call(account, "GET", f"/flex/v2/public-keys/{kid}")
-    if response.status_code >= 400:
-        raise CyberSourceError(
-            f"Could not fetch public key '{kid}' ({response.status_code}): {response.text}"
-        )
-    return response.json()
-
-
-def verify_unified_checkout_jwt(token, account):
-    """Verify a JWT issued by Unified Checkout and return its decoded payload.
-
-    With autoProcessing enabled, CyberSource authorizes the payment itself
-    and hands the browser this signed JWT as the result — our server never
-    calls the Payments API directly. We still must verify the signature
-    before trusting anything in it.
-    """
-    try:
-        header = jwt.get_unverified_header(token)
-    except jwt.InvalidTokenError as exc:
-        raise CyberSourceError(f"Malformed JWT: {exc}") from exc
-
-    kid = header.get("kid")
-    if not kid:
-        raise CyberSourceError("JWT header has no 'kid' — cannot look up its verification key.")
-
-    jwk = get_public_key(kid, account)
-    public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
-
-    try:
-        return jwt.decode(token, key=public_key, algorithms=["RS256"])
-    except jwt.InvalidTokenError as exc:
-        raise CyberSourceError(f"JWT signature verification failed: {exc}") from exc

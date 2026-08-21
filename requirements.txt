@@ -1,7 +1,6 @@
 Django>=5.2
 python-dotenv>=1.0
 requests>=2.32
-PyJWT>=2.8
 
 # Local HTTPS for runserver_plus — CyberSource's capture-context API
 # rejects http:// origins, so testing checkout locally needs TLS.
