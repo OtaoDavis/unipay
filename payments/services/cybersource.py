@@ -366,14 +366,23 @@ def get_public_key(kid, account):
     return response.json()
 
 
-def verify_unified_checkout_jwt(token, account):
+def verify_unified_checkout_jwt(token, account, _depth=0):
     """Verify a JWT issued by Unified Checkout and return its decoded payload.
 
     With autoProcessing enabled, CyberSource authorizes the payment itself
     and hands the browser this signed JWT as the result — our server never
     calls the Payments API directly. We still must verify the signature
     before trusting anything in it.
+
+    Confirmed live: CyberSource wraps the actual result in a second, inner
+    JWT -- the outer token's entire payload is just that JWT string (its
+    own header/kid/signature, verified the same way). Unwrap up to a small
+    fixed depth rather than trusting an attacker-controlled string to
+    dictate how many times we recurse.
     """
+    if _depth > 3:
+        raise CyberSourceError("Unified Checkout result JWT is nested too deeply.")
+
     try:
         header = jwt.get_unverified_header(token)
     except jwt.InvalidTokenError as exc:
@@ -387,8 +396,13 @@ def verify_unified_checkout_jwt(token, account):
     public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
 
     try:
-        return jwt.decode(token, key=public_key, algorithms=["RS256"])
+        payload = jwt.decode(token, key=public_key, algorithms=["RS256"])
     except jwt.InvalidTokenError as exc:
         raise CyberSourceError(f"JWT signature verification failed: {exc}") from exc
+
+    if isinstance(payload, str):
+        return verify_unified_checkout_jwt(payload, account, _depth=_depth + 1)
+
+    return payload
 
 
