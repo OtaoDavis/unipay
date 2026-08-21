@@ -1,4 +1,3 @@
-import json
 import logging
 
 from django.core.exceptions import ImproperlyConfigured
@@ -14,7 +13,7 @@ from .services.cybersource import CyberSourceError
 
 logger = logging.getLogger(__name__)
 
-# Statuses the completed-payment response can report as success. Not yet
+# Statuses CyberSource's completed-payment JWT can report as success. Not yet
 # confirmed against a real transaction (see SETUP.md) -- once one goes
 # through, check the logged raw payload and adjust this if needed.
 AUTHORIZED_STATUSES = {"AUTHORIZED", "COMPLETED", "ACCEPT", "ACCEPTED"}
@@ -73,14 +72,11 @@ def checkout(request, reference):
 
     target_origin = f"{request.scheme}://{request.get_host()}"
     capture_context = None
-    client_library = None
-    client_library_integrity = None
     config_error = None
     try:
         account = cybersource.get_account(payment.bank)
         account.validate()
         capture_context = cybersource.create_capture_context(payment, target_origin, account)
-        client_library, client_library_integrity = cybersource.extract_client_library(capture_context)
     except (ImproperlyConfigured, CyberSourceError) as exc:
         config_error = str(exc)
 
@@ -88,24 +84,20 @@ def checkout(request, reference):
         "payment": payment,
         "capture_context": capture_context,
         "config_error": config_error,
-        "client_library": client_library,
-        "client_library_integrity": client_library_integrity,
+        "cybersource_js_url": cybersource.get_unified_checkout_js_url(),
     }
     return render(request, "payments/checkout.html", context)
 
 
 @require_POST
 def complete_payment(request, reference):
-    """Called by the browser once unifiedPayments.complete() has run.
+    """Called by the browser once Unified Checkout's autoProcessing has
+    already authorized (or declined) the payment.
 
-    Per CyberSource's Unified Checkout docs, complete() -- enabled by the
-    completeMandate in the capture context -- has CyberSource orchestrate
-    the actual authorization itself and resolves with the payment
-    orchestration response directly (a plain JSON object, not a JWT to
-    verify). This is not independently signature-checked; for an
-    authoritative, tamper-proof record of the outcome, subscribe to the
-    uc.orders.transactionresults webhook (see SETUP.md) rather than relying
-    on this response alone for anything security-critical.
+    With autoProcessing on, CyberSource runs the whole authorization itself
+    and hands the browser a signed "completed payment result" JWT -- our
+    server never calls the Payments API directly. We verify that JWT's
+    signature here, then record the outcome.
     """
     payment = get_object_or_404(Payment, reference=reference)
 
@@ -114,14 +106,15 @@ def complete_payment(request, reference):
             {"redirect": reverse("payments:receipt", args=[payment.reference])}
         )
 
-    result_payload = request.POST.get("payment_result", "")
-    if not result_payload:
+    result_jwt = request.POST.get("payment_result", "")
+    if not result_jwt:
         return JsonResponse({"error": "Missing payment result."}, status=400)
 
     try:
-        result = json.loads(result_payload)
-    except ValueError:
-        return JsonResponse({"error": "Malformed payment result."}, status=400)
+        account = cybersource.get_account(payment.bank)
+        result = cybersource.verify_unified_checkout_jwt(result_jwt, account)
+    except (ImproperlyConfigured, CyberSourceError) as exc:
+        return JsonResponse({"error": str(exc)}, status=502)
 
     logger.info("Unified Checkout result for %s: %r", payment.reference, result)
 
