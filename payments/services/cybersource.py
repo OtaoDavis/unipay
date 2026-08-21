@@ -293,12 +293,9 @@ def create_capture_context(payment, target_origin, account):
                 "currency": payment.currency,
             }
         },
-        # Required for unifiedPayments.complete() to be allowed to run at
-        # all -- without this, CyberSource's own widget refuses to complete
-        # the payment ("Complete not allowed for this transaction"), no
-        # matter how the merchant account is otherwise configured.
         "completeMandate": {
             "type": "CAPTURE",
+            "consumerAuthentication": True,
         },
     }
 
