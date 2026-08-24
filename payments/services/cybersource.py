@@ -295,7 +295,7 @@ def create_capture_context(payment, target_origin, account):
         },
         "completeMandate": {
             "type": "CAPTURE",
-            "consumerAuthentication": "3DS",
+            "consumerAuthentication": True,
         },
     }
 
