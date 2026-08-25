@@ -1,6 +1,5 @@
 import json
 import logging
-from datetime import timedelta
 
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404, JsonResponse
@@ -19,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 # Statuses CyberSource's completed-payment response can report as success.
 AUTHORIZED_STATUSES = {"AUTHORIZED", "COMPLETED", "ACCEPT", "ACCEPTED"}
-CHECKOUT_LOCK_TIMEOUT = timedelta(minutes=20)
 
 
 def _decode_completed_payment(raw_result, payment):
@@ -107,13 +105,13 @@ def checkout(request, reference):
     payment = get_object_or_404(Payment, reference=reference)
     now = timezone.now()
 
-    # A CyberSource capture context is short-lived. Recover an abandoned
-    # checkout only after its previous context can no longer be used.
+    # Reopening an in-progress checkout closes the interrupted attempt. The
+    # student can start a new payment from its receipt instead of trying to
+    # recover a one-time CyberSource context.
     Payment.objects.filter(
         pk=payment.pk,
         status=Payment.Status.PROCESSING,
-        updated_at__lte=now - CHECKOUT_LOCK_TIMEOUT,
-    ).update(status=Payment.Status.PENDING, updated_at=now)
+    ).update(status=Payment.Status.FAILED, updated_at=now)
 
     # Atomic compare-and-set works on SQLite as well as databases with row
     # locking. Exactly one concurrent request can acquire this checkout.
@@ -162,7 +160,11 @@ def complete_payment(request, reference):
     """
     payment = get_object_or_404(Payment, reference=reference)
 
-    if payment.status not in {Payment.Status.PENDING, Payment.Status.PROCESSING}:
+    if payment.status not in {
+        Payment.Status.PENDING,
+        Payment.Status.PROCESSING,
+        Payment.Status.FAILED,
+    }:
         return JsonResponse(
             {"redirect": reverse("payments:receipt", args=[payment.reference])}
         )
@@ -199,7 +201,11 @@ def complete_payment(request, reference):
     )
     Payment.objects.filter(
         pk=payment.pk,
-        status__in=[Payment.Status.PENDING, Payment.Status.PROCESSING],
+        status__in=[
+            Payment.Status.PENDING,
+            Payment.Status.PROCESSING,
+            Payment.Status.FAILED,
+        ],
     ).update(
         cybs_transaction_id=str(result.get("id") or result.get("transactionId") or ""),
         cybs_response_code=status,
@@ -212,8 +218,26 @@ def complete_payment(request, reference):
     )
 
 
+@require_POST
+def fail_payment(request, reference):
+    """Close an interrupted checkout before offering a fresh payment."""
+    payment = get_object_or_404(Payment, reference=reference)
+    Payment.objects.filter(
+        pk=payment.pk,
+        status__in=[Payment.Status.PENDING, Payment.Status.PROCESSING],
+    ).update(status=Payment.Status.FAILED, updated_at=timezone.now())
+    return JsonResponse(
+        {"redirect": reverse("payments:receipt", args=[payment.reference])}
+    )
+
+
 @never_cache
 def receipt(request, reference):
     """Step 3 - outcome page."""
     payment = get_object_or_404(Payment, reference=reference)
+    if payment.status == Payment.Status.PROCESSING:
+        Payment.objects.filter(
+            pk=payment.pk, status=Payment.Status.PROCESSING
+        ).update(status=Payment.Status.FAILED, updated_at=timezone.now())
+        payment.refresh_from_db()
     return render(request, "payments/receipt.html", {"payment": payment})

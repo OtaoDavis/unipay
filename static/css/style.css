@@ -204,6 +204,12 @@ select:focus {
   transform: translateY(0);
 }
 
+.button-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
 .bank-choice-list {
   display: flex;
   flex-direction: column;
@@ -572,6 +578,7 @@ select:focus {
 .status-badge.authorized { background: #e8f6ee; color: #1e7d47; }
 .status-badge.pending    { background: #fdf3e2; color: #9a6b12; }
 .status-badge.processing { background: #e8f0fb; color: #245b96; }
+.status-badge.failed     { background: #fdecea; color: #c0392b; }
 .status-badge.declined   { background: #fdecea; color: #c0392b; }
 
 /* The checkout page can grow taller than the viewport once the card iframe

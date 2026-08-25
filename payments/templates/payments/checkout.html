@@ -106,6 +106,7 @@
   var errorBox = document.getElementById("checkout-error");
   var csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
   var completeUrl = "{% url 'payments:complete_payment' payment.reference %}";
+  var failUrl = "{% url 'payments:fail_payment' payment.reference %}";
   var receiptUrl = "{% url 'payments:receipt' payment.reference %}";
   var captureContext = "{{ capture_context|escapejs }}";
   var paymentModal = document.getElementById("secure-payment-modal");
@@ -137,9 +138,23 @@
     errorBox.hidden = false;
   }
 
+  async function closeFailedPayment(fallbackMessage) {
+    try {
+      var response = await fetch(failUrl, {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken },
+      });
+      var data = await response.json();
+      if (!response.ok || !data.redirect) throw new Error(fallbackMessage);
+      window.location.replace(data.redirect);
+    } catch (error) {
+      showError(fallbackMessage);
+    }
+  }
+
   async function launchCheckout() {
     if (typeof Accept === "undefined") {
-      showError(
+      await closeFailedPayment(
         "Could not load the secure payment form. This is usually caused by an ad " +
           "blocker, browser extension, or network filter blocking " +
           "apitest.cybersource.com — please disable it or try a different network, " +
@@ -175,13 +190,15 @@
       var data = await response.json();
 
       if (!response.ok || data.error) {
-        showError(data.error || "Payment could not be processed. Please try again.");
+        await closeFailedPayment(
+          data.error || "Payment could not be processed. Please try again."
+        );
         return;
       }
       // Remove the one-time checkout from browser history after completion.
       window.location.replace(data.redirect || receiptUrl);
     } catch (error) {
-      showError(
+      await closeFailedPayment(
         (error && error.message) ||
           "Something went wrong loading the payment form. Please refresh and try again."
       );

@@ -12,6 +12,11 @@ urlpatterns = [
         views.complete_payment,
         name="complete_payment",
     ),
+    path(
+        "checkout/<uuid:reference>/failed/",
+        views.fail_payment,
+        name="fail_payment",
+    ),
     path("receipt/<uuid:reference>/", views.receipt, name="receipt"),
     # Kept last: a bare "<bank>/" would otherwise shadow the more specific
     # routes above for malformed URLs (e.g. "/pay/checkout/" with no reference).
