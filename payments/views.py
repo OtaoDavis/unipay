@@ -199,6 +199,7 @@ def complete_payment(request, reference):
     new_status = (
         Payment.Status.AUTHORIZED if status in AUTHORIZED_STATUSES else Payment.Status.DECLINED
     )
+    details = result.get("details") if isinstance(result.get("details"), dict) else {}
     Payment.objects.filter(
         pk=payment.pk,
         status__in=[
@@ -208,6 +209,9 @@ def complete_payment(request, reference):
         ],
     ).update(
         cybs_transaction_id=str(result.get("id") or result.get("transactionId") or ""),
+        cybs_reconciliation_id=str(
+            result.get("reconciliationId") or details.get("reconciliationId") or ""
+        ),
         cybs_response_code=status,
         status=new_status,
         updated_at=timezone.now(),

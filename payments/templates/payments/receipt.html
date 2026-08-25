@@ -2,67 +2,105 @@
 {% load static %}
 
 {% block title %}Payment Receipt | Cavendish University Zambia{% endblock %}
-{% block body_class %}scrollable{% endblock %}
+{% block body_class %}scrollable receipt-page{% endblock %}
 
 {% block content %}
-<div class="wide-payment-card">
-  <div class="card-header">
-    <img src="{% static 'images/cuz_logo.png' %}" alt="CUZ Logo" class="form-logo" />
-    <div class="header-text">
-      <h1>Payment Receipt</h1>
-      <p>Keep this reference for your records.</p>
-    </div>
-  </div>
+<div class="receipt-page-wrap">
+  <article class="receipt-document">
+    <header class="receipt-header">
+      <div class="receipt-brand">
+        <img src="{% static 'images/cuz_logo.png' %}" alt="Cavendish University Zambia" />
+        <div>
+          <h1>Cavendish University Zambia</h1>
+          <p>Official online payment receipt</p>
+        </div>
+      </div>
+      <div class="receipt-number">
+        <span>Receipt reference</span>
+        <strong>{{ payment.merchant_reference }}</strong>
+      </div>
+    </header>
 
-  <div class="summary-list">
-    <div class="summary-row">
-      <span class="label">Status</span>
-      <span class="value">
-        <span class="status-badge {{ payment.status|lower }}">{{ payment.get_status_display }}</span>
-      </span>
-    </div>
-    <div class="summary-row">
-      <span class="label">Reference</span>
-      <span class="value">{{ payment.merchant_reference }}</span>
-    </div>
-    {% if payment.cybs_transaction_id %}
-    <div class="summary-row">
-      <span class="label">Transaction ID</span>
-      <span class="value">{{ payment.cybs_transaction_id }}</span>
-    </div>
-    {% endif %}
-    <div class="summary-row">
-      <span class="label">Student</span>
-      <span class="value">{{ payment.full_name }} ({{ payment.student_id }})</span>
-    </div>
-    <div class="summary-row">
-      <span class="label">Purpose</span>
-      <span class="value">{{ payment.get_purpose_display }}</span>
-    </div>
-    <div class="summary-row">
-      <span class="label">Date</span>
-      <span class="value">{{ payment.created_at|date:"d M Y, H:i" }}</span>
-    </div>
-    <div class="summary-row total">
-      <span class="label">Amount</span>
-      <span class="value">{{ payment.currency }} {{ payment.amount }}</span>
-    </div>
-  </div>
+    <section class="receipt-result receipt-result-{{ payment.status|lower }}">
+      <div>
+        <span class="receipt-result-label">Payment status</span>
+        <span class="status-badge {{ payment.status|lower }}">
+          {{ payment.get_status_display }}
+        </span>
+      </div>
+      <div class="receipt-total">
+        <span>Amount</span>
+        <strong>{{ payment.currency }} {{ payment.amount }}</strong>
+      </div>
+    </section>
+
+    <section class="receipt-details" aria-label="Payment details">
+      <h2>Payment details</h2>
+      <dl class="receipt-detail-grid">
+        <div>
+          <dt>Student name</dt>
+          <dd>{{ payment.full_name }}</dd>
+        </div>
+        <div>
+          <dt>Student ID</dt>
+          <dd>{{ payment.student_id }}</dd>
+        </div>
+        <div>
+          <dt>Payment purpose</dt>
+          <dd>{{ payment.get_purpose_display }}</dd>
+        </div>
+        <div>
+          <dt>Settlement bank</dt>
+          <dd>{{ payment.bank|title }}</dd>
+        </div>
+        <div>
+          <dt>Created</dt>
+          <dd>{{ payment.created_at|date:"d M Y, H:i" }}</dd>
+        </div>
+        <div>
+          <dt>Last updated</dt>
+          <dd>{{ payment.updated_at|date:"d M Y, H:i" }}</dd>
+        </div>
+        {% if payment.cybs_transaction_id %}
+          <div class="receipt-detail-wide">
+            <dt>Transaction ID</dt>
+            <dd>{{ payment.cybs_transaction_id }}</dd>
+          </div>
+        {% endif %}
+        {% if payment.cybs_reconciliation_id %}
+          <div class="receipt-detail-wide">
+            <dt>Reconciliation ID</dt>
+            <dd>{{ payment.cybs_reconciliation_id }}</dd>
+          </div>
+        {% endif %}
+      </dl>
+    </section>
+
+    <footer class="receipt-footer">
+      <span class="receipt-footer-mark" aria-hidden="true">&#10003;</span>
+      <div>
+        <strong>Electronically generated receipt</strong>
+        <p>Keep the receipt reference when contacting the Finance Office.</p>
+      </div>
+    </footer>
+  </article>
 
   {% if payment.status == "FAILED" %}
-    <p class="form-alert">
+    <p class="form-alert receipt-message">
       We could not confirm this payment attempt. It has been closed and will
       not be reused. Start a new payment below to try again.
     </p>
   {% endif %}
 
-  <div class="action-area">
+  <div class="action-area receipt-actions">
     {% if payment.status == "FAILED" %}
       <a class="pay-btn button-link" href="{% url 'payments:choose_bank' %}">
         Retry payment
       </a>
     {% else %}
-      <button type="button" class="pay-btn" onclick="window.print()">Print Receipt</button>
+      <button type="button" class="pay-btn" onclick="window.print()">
+        Print or save as PDF
+      </button>
       <a class="back-link" href="{% url 'payments:choose_bank' %}">&larr; Make another payment</a>
     {% endif %}
   </div>
