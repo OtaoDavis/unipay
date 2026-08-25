@@ -1,3 +1,4 @@
+import json
 import logging
 
 from django.core.exceptions import ImproperlyConfigured
@@ -13,9 +14,7 @@ from .services.cybersource import CyberSourceError
 
 logger = logging.getLogger(__name__)
 
-# Statuses CyberSource's completed-payment JWT can report as success. Not yet
-# confirmed against a real transaction (see SETUP.md) -- once one goes
-# through, check the logged raw payload and adjust this if needed.
+# Statuses CyberSource's completed-payment response can report as success.
 AUTHORIZED_STATUSES = {"AUTHORIZED", "COMPLETED", "ACCEPT", "ACCEPTED"}
 
 
@@ -95,13 +94,11 @@ def checkout(request, reference):
 
 @require_POST
 def complete_payment(request, reference):
-    """Called by the browser once Unified Checkout's autoProcessing has
-    already authorized (or declined) the payment.
+    """Called after Unified Checkout v0 complete() authorizes or declines.
 
-    With autoProcessing on, CyberSource runs the whole authorization itself
-    and hands the browser a signed "completed payment result" JWT -- our
-    server never calls the Payments API directly. We verify that JWT's
-    signature here, then record the outcome.
+    The v0 SDK returns its completed-payment response as a JSON object. A
+    CyberSource transaction-result webhook or server-side lookup should be
+    the authoritative source before this flow is used in production.
     """
     payment = get_object_or_404(Payment, reference=reference)
 
@@ -110,15 +107,17 @@ def complete_payment(request, reference):
             {"redirect": reverse("payments:receipt", args=[payment.reference])}
         )
 
-    result_jwt = request.POST.get("payment_result", "")
-    if not result_jwt:
+    result_payload = request.POST.get("payment_result", "")
+    if not result_payload:
         return JsonResponse({"error": "Missing payment result."}, status=400)
 
     try:
-        account = cybersource.get_account(payment.bank)
-        result = cybersource.verify_unified_checkout_jwt(result_jwt, account)
-    except (ImproperlyConfigured, CyberSourceError) as exc:
-        return JsonResponse({"error": str(exc)}, status=502)
+        result = json.loads(result_payload)
+    except (TypeError, ValueError):
+        return JsonResponse({"error": "Malformed payment result."}, status=400)
+
+    if not isinstance(result, dict):
+        return JsonResponse({"error": "Malformed payment result."}, status=400)
 
     logger.info("Unified Checkout result for %s: %r", payment.reference, result)
 
