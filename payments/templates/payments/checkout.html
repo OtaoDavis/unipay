@@ -45,11 +45,16 @@
       contact the Finance Office.
     </div>
   {% else %}
-    <p class="secure-checkout-note">
-      <span aria-hidden="true">&#128274;</span>
-      Card details and bank verification are handled securely by CyberSource.
-    </p>
-    <div id="payment-selection" class="checkout-launch"></div>
+    <section class="checkout-payment-card" aria-labelledby="payment-method-title">
+      <div class="checkout-payment-heading">
+        <div class="checkout-payment-icon" aria-hidden="true">&#128179;</div>
+        <div>
+          <h2 id="payment-method-title">Pay by card</h2>
+          <p>Select the card option below to continue securely.</p>
+        </div>
+      </div>
+      <div id="payment-selection" class="checkout-launch"></div>
+    </section>
 
     <!-- The card and 3DS iframes are presented in a focused modal. -->
     <div

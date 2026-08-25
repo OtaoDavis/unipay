@@ -371,19 +371,45 @@ select:focus {
   font-size: 17px;
 }
 
-/* Unified Checkout launch and focused card-entry modal */
-.secure-checkout-note {
+/* Unified Checkout launch card and focused card-entry modal */
+.checkout-payment-card {
+  padding: 17px;
+  border: 1px solid #e3e8ef;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #fff, #f8fafc);
+  box-shadow: 0 8px 22px rgba(33, 55, 105, 0.08);
+}
+
+.checkout-payment-heading {
   display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  background: #eef4fb;
-  border: 1px solid #dce7f5;
-  color: #395578;
-  padding: 12px 14px;
-  border-radius: 9px;
-  font-size: 12.5px;
-  line-height: 1.55;
-  margin-bottom: 18px;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #e9edf2;
+}
+
+.checkout-payment-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--cu-navy-light);
+  font-size: 19px;
+}
+
+.checkout-payment-heading h2 {
+  color: var(--cu-navy);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.checkout-payment-heading p {
+  margin-top: 2px;
+  color: #7c8797;
+  font-size: 11.5px;
 }
 
 .checkout-launch {
