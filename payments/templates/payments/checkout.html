@@ -45,6 +45,10 @@
       contact the Finance Office.
     </div>
   {% else %}
+    <p class="form-alert">
+      &#128274; Your bank may open a secure verification window during payment.
+      Please allow pop-ups for this site if prompted, or the payment cannot complete.
+    </p>
     <!-- CyberSource Unified Checkout mounts here. -->
     <div id="embedded-payment"></div>
     <p id="checkout-error" class="alert alert-error" hidden></p>
@@ -59,7 +63,7 @@
 
 {% block extra_js %}
 {% if not config_error %}
-<script src="{{ cybersource_js_url }}"></script>
+<script src="{{ client_library }}" integrity="{{ client_library_integrity }}" crossorigin="anonymous"></script>
 <script>
 (function () {
   var errorBox = document.getElementById("checkout-error");
@@ -87,6 +91,22 @@
     try {
       client = await VAS.UnifiedCheckout("{{ capture_context|escapejs }}");
       checkout = await client.createCheckout({ autoProcessing: true });
+
+      // Diagnostic only: CyberSource's SDK doesn't expose any way for us to
+      // control the 3DS challenge window itself (see SETUP.md), but if it
+      // detects a problem -- e.g. its popup being blocked -- these are the
+      // only hooks it gives us to find out, instead of a silent hang.
+      checkout.on("error", function (err) {
+        console.error("Unified Checkout error event:", err);
+        showError(
+          "Something went wrong during verification. If your browser blocked a " +
+            "pop-up window, please allow pop-ups for this site and try again."
+        );
+      });
+      checkout.on("*", function (eventName, payload) {
+        console.log("Unified Checkout event:", eventName, payload);
+      });
+
       var resultJwt = await checkout.mount("#embedded-payment");
 
       var response = await fetch(completeUrl, {

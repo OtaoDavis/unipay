@@ -159,15 +159,30 @@ def validate_all():
     return results
 
 
-def get_unified_checkout_js_url():
-    """CDN URL for the Unified Checkout Quick Start front-end SDK.
+def extract_client_library(session_context):
+    """Pull clientLibrary/clientLibraryIntegrity out of a /uc/v1/sessions JWT.
 
-    This is the fixed, versioned URL CyberSource's own Quick Start guide
-    documents verbatim (VAS.UnifiedCheckout / createCheckout / mount) --
-    unlike the separate Accept()-based integration path, this SDK is not
-    loaded from a per-transaction URL embedded in the capture context.
+    Unlike the older /up/v1/capture-contexts endpoint (which serves a fixed,
+    hardcodable asset URL), Unified Checkout v1's assets live at a unique,
+    unpredictable per-session path -- confirmed live: the URL contains a
+    long random token, not a version number. Hardcoding a URL here would
+    404. This only reads the JWT's payload (no signature check) since it's
+    used purely to pick which <script> tag to load, not for a trust
+    decision -- CyberSource still validates everything server-side.
     """
-    return f"https://{get_host()}/uc/v1/assets/1.0.0/UnifiedCheckout.js"
+    try:
+        payload_segment = session_context.split(".")[1]
+        padded = payload_segment + "=" * (-len(payload_segment) % 4)
+        data = json.loads(base64.urlsafe_b64decode(padded))
+    except (IndexError, ValueError, binascii.Error) as exc:
+        raise CyberSourceError(f"Could not parse session context JWT: {exc}") from exc
+
+    for entry in data.get("ctx", []):
+        library = entry.get("data", {}).get("clientLibrary")
+        if library:
+            return library, entry["data"].get("clientLibraryIntegrity")
+
+    raise CyberSourceError("Session context JWT has no clientLibrary field.")
 
 
 def _signature_headers(account, method, path, body_bytes):
@@ -266,16 +281,24 @@ def _call(account, method, path, payload=None, accept="application/json"):
 
 
 def create_capture_context(payment, target_origin, account):
-    """Ask CyberSource for a capture context JWT for one payment.
+    """Ask CyberSource for a Unified Checkout v1 session JWT for one payment.
 
     The JWT is handed to the Unified Checkout JS SDK in the browser; it
     scopes that session to this amount/currency/origin only. `account` is
     the bank the student explicitly chose (payment.bank), resolved by the
     caller so there's a single source of truth for routing.
+
+    Uses /uc/v1/sessions (Unified Checkout v1), not the older
+    /up/v1/capture-contexts -- confirmed live that v1 is what actually
+    renders the 3DS step-up challenge in an inline iframe rather than a
+    popup window (its session response includes a dedicated
+    ctx[].data.iframes.stepup path that the older endpoint's response never
+    had). clientVersion is deliberately omitted -- CyberSource's own
+    guidance is that Unified Checkout selects the latest version
+    automatically when it's absent.
     """
     payload = {
         "targetOrigins": [target_origin],
-        "clientVersion": "0.28",
         "allowedCardNetworks": ["VISA", "MASTERCARD", "AMEX"],
         "allowedPaymentTypes": ["PANENTRY"],
         "country": "ZM",
@@ -287,22 +310,24 @@ def create_capture_context(payment, target_origin, account):
             "requestShipping": False,
             "showAcceptedNetworkIcons": True,
         },
-        "orderInformation": {
-            "amountDetails": {
-                "totalAmount": str(payment.amount),
-                "currency": payment.currency,
-            }
+        "data": {
+            "orderInformation": {
+                "amountDetails": {
+                    "totalAmount": str(payment.amount),
+                    "currency": payment.currency,
+                }
+            },
         },
         "completeMandate": {
             "type": "CAPTURE",
-            "consumerAuthentication": True,
+            "consumerAuthentication": "3DS",
         },
     }
 
-    response = _call(account, "POST", "/up/v1/capture-contexts", payload)
+    response = _call(account, "POST", "/uc/v1/sessions", payload)
     if response.status_code >= 400:
         raise CyberSourceError(
-            f"capture-contexts request failed ({response.status_code}): {response.text}"
+            f"sessions request failed ({response.status_code}): {response.text}"
         )
     return response.text.strip()
 

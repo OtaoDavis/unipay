@@ -72,11 +72,14 @@ def checkout(request, reference):
 
     target_origin = f"{request.scheme}://{request.get_host()}"
     capture_context = None
+    client_library = None
+    client_library_integrity = None
     config_error = None
     try:
         account = cybersource.get_account(payment.bank)
         account.validate()
         capture_context = cybersource.create_capture_context(payment, target_origin, account)
+        client_library, client_library_integrity = cybersource.extract_client_library(capture_context)
     except (ImproperlyConfigured, CyberSourceError) as exc:
         config_error = str(exc)
 
@@ -84,7 +87,8 @@ def checkout(request, reference):
         "payment": payment,
         "capture_context": capture_context,
         "config_error": config_error,
-        "cybersource_js_url": cybersource.get_unified_checkout_js_url(),
+        "client_library": client_library,
+        "client_library_integrity": client_library_integrity,
     }
     return render(request, "payments/checkout.html", context)
 
