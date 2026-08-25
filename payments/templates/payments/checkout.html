@@ -45,13 +45,45 @@
       contact the Finance Office.
     </div>
   {% else %}
-    <p class="form-alert">
-      &#128274; Your bank may ask you to verify this payment securely on this page.
+    <p class="secure-checkout-note">
+      <span aria-hidden="true">&#128274;</span>
+      Card details and bank verification are handled securely by CyberSource.
     </p>
-    <!-- Unified Checkout v0.34 mounts both payment screens inline. -->
-    <div id="payment-selection"></div>
-    <div id="embedded-payment"></div>
-    <p id="checkout-error" class="alert alert-error" hidden></p>
+    <div id="payment-selection" class="checkout-launch"></div>
+
+    <!-- The card and 3DS iframes are presented in a focused modal. -->
+    <div
+      id="secure-payment-modal"
+      class="secure-payment-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="secure-payment-title"
+      aria-hidden="true"
+      hidden
+    >
+      <div class="secure-payment-backdrop" aria-hidden="true"></div>
+      <section class="secure-payment-panel">
+        <header class="secure-payment-header">
+          <div class="secure-payment-icon" aria-hidden="true">&#128274;</div>
+          <div>
+            <h2 id="secure-payment-title">Secure card payment</h2>
+            <p>Complete your payment without leaving this page.</p>
+          </div>
+          <div class="secure-payment-amount">
+            <span>Amount</span>
+            <strong>{{ payment.currency }} {{ payment.amount }}</strong>
+          </div>
+        </header>
+        <div class="secure-payment-body">
+          <div id="embedded-payment"></div>
+          <p id="checkout-error" class="alert alert-error" hidden></p>
+        </div>
+        <footer class="secure-payment-footer">
+          <span aria-hidden="true">&#128274;</span>
+          Do not refresh or close this page while payment is processing.
+        </footer>
+      </section>
+    </div>
   {% endif %}
 
   <div class="action-area">
@@ -71,6 +103,8 @@
   var completeUrl = "{% url 'payments:complete_payment' payment.reference %}";
   var receiptUrl = "{% url 'payments:receipt' payment.reference %}";
   var captureContext = "{{ capture_context|escapejs }}";
+  var paymentModal = document.getElementById("secure-payment-modal");
+  var paymentScreen = document.getElementById("embedded-payment");
 
   // A page restored from the browser's back-forward cache may contain an
   // already-used CyberSource context. Revalidate it with Django instead.
@@ -78,7 +112,22 @@
     if (event.persisted) window.location.reload();
   });
 
+  function openPaymentModal() {
+    paymentModal.hidden = false;
+    paymentModal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("payment-modal-open");
+  }
+
+  // Unified Checkout adds its secure iframe only after the customer selects
+  // card payment. Present it as a focused dialog instead of extending the
+  // checkout card below the fold.
+  var paymentScreenObserver = new MutationObserver(function () {
+    if (paymentScreen.childElementCount > 0) openPaymentModal();
+  });
+  paymentScreenObserver.observe(paymentScreen, { childList: true, subtree: true });
+
   function showError(message) {
+    openPaymentModal();
     errorBox.textContent = message;
     errorBox.hidden = false;
   }
