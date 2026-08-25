@@ -72,6 +72,12 @@
   var receiptUrl = "{% url 'payments:receipt' payment.reference %}";
   var captureContext = "{{ capture_context|escapejs }}";
 
+  // A page restored from the browser's back-forward cache may contain an
+  // already-used CyberSource context. Revalidate it with Django instead.
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted) window.location.reload();
+  });
+
   function showError(message) {
     errorBox.textContent = message;
     errorBox.hidden = false;
@@ -99,6 +105,10 @@
         },
       });
       var completeResponse = await unifiedPayments.complete(transientToken);
+      var serializedResult =
+        typeof completeResponse === "string"
+          ? completeResponse
+          : JSON.stringify(completeResponse);
 
       var response = await fetch(completeUrl, {
         method: "POST",
@@ -106,7 +116,7 @@
           "X-CSRFToken": csrfToken,
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: "payment_result=" + encodeURIComponent(JSON.stringify(completeResponse)),
+        body: "payment_result=" + encodeURIComponent(serializedResult),
       });
       var data = await response.json();
 
@@ -114,7 +124,8 @@
         showError(data.error || "Payment could not be processed. Please try again.");
         return;
       }
-      window.location.href = data.redirect || receiptUrl;
+      // Remove the one-time checkout from browser history after completion.
+      window.location.replace(data.redirect || receiptUrl);
     } catch (error) {
       showError(
         (error && error.message) ||

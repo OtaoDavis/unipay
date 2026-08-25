@@ -6,6 +6,7 @@ from django.db import models
 class Payment(models.Model):
     class Status(models.TextChoices):
         PENDING = "PENDING", "Pending"
+        PROCESSING = "PROCESSING", "Processing"
         AUTHORIZED = "AUTHORIZED", "Authorized"
         DECLINED = "DECLINED", "Declined"
         REFUNDED = "REFUNDED", "Refunded"

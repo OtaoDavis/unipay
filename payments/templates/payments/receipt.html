@@ -49,9 +49,23 @@
     </div>
   </div>
 
+  {% if payment.status == "PROCESSING" %}
+    <p class="form-alert">
+      A checkout session has already started for this payment. Do not start
+      another payment. If the checkout was interrupted, wait 20 minutes before
+      reopening its checkout URL or contact the Finance Office.
+    </p>
+  {% endif %}
+
   <div class="action-area">
-    <button type="button" class="pay-btn" onclick="window.print()">Print Receipt</button>
-    <a class="back-link" href="{% url 'payments:choose_bank' %}">&larr; Make another payment</a>
+    {% if payment.status == "PROCESSING" %}
+      <a class="back-link" href="{% url 'payments:checkout' payment.reference %}">
+        Retry this checkout after 20 minutes
+      </a>
+    {% else %}
+      <button type="button" class="pay-btn" onclick="window.print()">Print Receipt</button>
+      <a class="back-link" href="{% url 'payments:choose_bank' %}">&larr; Make another payment</a>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

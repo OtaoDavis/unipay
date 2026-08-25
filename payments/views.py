@@ -1,10 +1,13 @@
 import json
 import logging
+from datetime import timedelta
 
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from .forms import PaymentDetailsForm
@@ -16,6 +19,42 @@ logger = logging.getLogger(__name__)
 
 # Statuses CyberSource's completed-payment response can report as success.
 AUTHORIZED_STATUSES = {"AUTHORIZED", "COMPLETED", "ACCEPT", "ACCEPTED"}
+CHECKOUT_LOCK_TIMEOUT = timedelta(minutes=20)
+
+
+def _decode_completed_payment(raw_result, payment):
+    """Normalize the response variants returned by Unified Checkout v0.
+
+    Depending on the client build, complete() can resolve to an object, a
+    JSON-encoded object, or a signed completed-payment JWT. Limit recursive
+    string decoding so malformed input cannot cause unbounded work.
+    """
+    result = raw_result
+    for _ in range(3):
+        if isinstance(result, dict):
+            # Some client builds wrap the orchestration response.
+            for key in ("completeResponse", "paymentResult", "result"):
+                nested = result.get(key)
+                if isinstance(nested, (dict, str)):
+                    result = nested
+                    break
+            else:
+                return result
+            if isinstance(result, dict):
+                return result
+            continue
+
+        if not isinstance(result, str) or not result.strip():
+            raise ValueError("Malformed payment result.")
+
+        result = result.strip()
+        if result.count(".") == 2 and not result.startswith(("{", "[", '"')):
+            account = cybersource.get_account(payment.bank)
+            return cybersource.verify_unified_checkout_jwt(result, account)
+
+        result = json.loads(result)
+
+    raise ValueError("Malformed payment result.")
 
 
 def choose_bank(request):
@@ -57,6 +96,7 @@ def payment_form(request, bank):
     )
 
 
+@never_cache
 def checkout(request, reference):
     """Step 2 - card entry via CyberSource Unified Checkout.
 
@@ -65,9 +105,25 @@ def checkout(request, reference):
     to the Unified Checkout SDK, which mounts the card entry UI in-page.
     """
     payment = get_object_or_404(Payment, reference=reference)
+    now = timezone.now()
 
-    if payment.status != Payment.Status.PENDING:
+    # A CyberSource capture context is short-lived. Recover an abandoned
+    # checkout only after its previous context can no longer be used.
+    Payment.objects.filter(
+        pk=payment.pk,
+        status=Payment.Status.PROCESSING,
+        updated_at__lte=now - CHECKOUT_LOCK_TIMEOUT,
+    ).update(status=Payment.Status.PENDING, updated_at=now)
+
+    # Atomic compare-and-set works on SQLite as well as databases with row
+    # locking. Exactly one concurrent request can acquire this checkout.
+    lock_acquired = Payment.objects.filter(
+        pk=payment.pk, status=Payment.Status.PENDING
+    ).update(status=Payment.Status.PROCESSING, updated_at=now)
+    if not lock_acquired:
+        payment.refresh_from_db()
         return redirect("payments:receipt", reference=payment.reference)
+    payment.refresh_from_db()
 
     target_origin = f"{request.scheme}://{request.get_host()}"
     capture_context = None
@@ -81,6 +137,10 @@ def checkout(request, reference):
         client_library, client_library_integrity = cybersource.extract_client_library(capture_context)
     except (ImproperlyConfigured, CyberSourceError) as exc:
         config_error = str(exc)
+        Payment.objects.filter(
+            pk=payment.pk, status=Payment.Status.PROCESSING
+        ).update(status=Payment.Status.PENDING)
+        payment.status = Payment.Status.PENDING
 
     context = {
         "payment": payment,
@@ -102,7 +162,7 @@ def complete_payment(request, reference):
     """
     payment = get_object_or_404(Payment, reference=reference)
 
-    if payment.status != Payment.Status.PENDING:
+    if payment.status not in {Payment.Status.PENDING, Payment.Status.PROCESSING}:
         return JsonResponse(
             {"redirect": reverse("payments:receipt", args=[payment.reference])}
         )
@@ -112,9 +172,11 @@ def complete_payment(request, reference):
         return JsonResponse({"error": "Missing payment result."}, status=400)
 
     try:
-        result = json.loads(result_payload)
+        result = _decode_completed_payment(result_payload, payment)
     except (TypeError, ValueError):
         return JsonResponse({"error": "Malformed payment result."}, status=400)
+    except (ImproperlyConfigured, CyberSourceError) as exc:
+        return JsonResponse({"error": str(exc)}, status=502)
 
     if not isinstance(result, dict):
         return JsonResponse({"error": "Malformed payment result."}, status=400)
@@ -132,18 +194,25 @@ def complete_payment(request, reference):
             status=502,
         )
 
-    payment.cybs_transaction_id = str(result.get("id") or result.get("transactionId") or "")
-    payment.cybs_response_code = status
-    payment.status = (
+    new_status = (
         Payment.Status.AUTHORIZED if status in AUTHORIZED_STATUSES else Payment.Status.DECLINED
     )
-    payment.save()
+    Payment.objects.filter(
+        pk=payment.pk,
+        status__in=[Payment.Status.PENDING, Payment.Status.PROCESSING],
+    ).update(
+        cybs_transaction_id=str(result.get("id") or result.get("transactionId") or ""),
+        cybs_response_code=status,
+        status=new_status,
+        updated_at=timezone.now(),
+    )
 
     return JsonResponse(
         {"redirect": reverse("payments:receipt", args=[payment.reference])}
     )
 
 
+@never_cache
 def receipt(request, reference):
     """Step 3 - outcome page."""
     payment = get_object_or_404(Payment, reference=reference)
