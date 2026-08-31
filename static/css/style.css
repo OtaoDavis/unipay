@@ -271,19 +271,19 @@ select:focus {
 .bank-logo {
   display: block;
   flex: 0 0 auto;
-  width: 195px;
-  height: 108px;
-  margin-bottom: 20px;
+  width: 150px;
+  height: 76px;
+  margin-bottom: 16px;
   background-position: center;
   background-repeat: no-repeat;
 }
 
 .bank-logo-zanaco {
-  background-size: 125% auto;
+  background-size: 100% auto;
 }
 
 .bank-logo-absa {
-  background-size: 210% auto;
+  background-size: 205% auto;
 }
 
 .bank-choice-name {
