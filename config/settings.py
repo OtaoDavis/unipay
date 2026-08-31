@@ -207,7 +207,7 @@ CYBERSOURCE = {
         },
         "absa": {
             "LABEL": "Absa",
-            "LOGO": "images/absa-logo.jpg",
+            "LOGO": "images/absa-logo.svg",
             "ENVIRONMENT": os.getenv(
                 "CYBS_ABSA_ENVIRONMENT", os.getenv("CYBS_ENVIRONMENT", "test")
             ),
