@@ -14,7 +14,7 @@
     />
     <div class="header-text">
       <h1>Student Payment Portal</h1>
-      <p>Select the bank you would like to process your payment through.</p>
+      <p>Select the bank you would like to process your payment to.</p>
     </div>
   </div>
 
@@ -25,17 +25,16 @@
         class="bank-choice-card bank-choice-card-{{ bank.slug }}"
         aria-label="Continue with {{ bank.label }}"
       >
-        <span class="bank-logo-frame">
-          {% if bank.logo %}
-            <img
-              src="{% static bank.logo %}"
-              alt="{{ bank.label }} logo"
-              class="bank-logo bank-logo-{{ bank.slug }}"
-            />
-          {% endif %}
-        </span>
+        {% if bank.logo %}
+          <span
+            role="img"
+            aria-label="{{ bank.label }} logo"
+            class="bank-logo bank-logo-{{ bank.slug }}"
+            style="background-image: url('{% static bank.logo %}')"
+          ></span>
+        {% endif %}
         <span class="bank-choice-name">{{ bank.label }}</span>
-        <span class="bank-choice-action">Continue securely <span aria-hidden="true">&rarr;</span></span>
+        <span class="bank-choice-action">Proceed with payment <span aria-hidden="true">&rarr;</span></span>
       </a>
     {% empty %}
       <p class="form-alert">
