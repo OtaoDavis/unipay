@@ -156,8 +156,8 @@
     if (typeof Accept === "undefined") {
       await closeFailedPayment(
         "Could not load the secure payment form. This is usually caused by an ad " +
-          "blocker, browser extension, or network filter blocking " +
-          "apitest.cybersource.com — please disable it or try a different network, " +
+          "blocker, browser extension, or network filter blocking the secure " +
+          "payment service — please disable it or try a different network, " +
           "then refresh this page."
       );
       return;

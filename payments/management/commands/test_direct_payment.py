@@ -32,6 +32,12 @@ class Command(BaseCommand):
         except Exception as exc:
             raise CommandError(str(exc))
 
+        if account.environment == "production":
+            raise CommandError(
+                "Refusing to send CyberSource's sandbox test card to the "
+                f"production account '{account.slug}'."
+            )
+
         self.stdout.write(f"Calling POST /pts/v2/payments for '{account.slug}'...")
         status_code, body = cybersource.direct_test_authorization(
             account, amount=options["amount"], currency=options["currency"]

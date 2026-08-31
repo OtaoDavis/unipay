@@ -186,7 +186,7 @@ LOGGING = {
 }
 
 CYBERSOURCE = {
-    # "test" -> apitest.cybersource.com, "production" -> api.cybersource.com
+    # Legacy/default environment. Each account can override this independently.
     "ENVIRONMENT": os.getenv("CYBS_ENVIRONMENT", "test"),
  
     # One entry per acquiring bank. Add a third here if CUZ ever onboards
@@ -194,6 +194,10 @@ CYBERSOURCE = {
     "ACCOUNTS": {
         "zanaco": {
             "LABEL": "Zanaco",
+            "LOGO": "images/zanaco-logo.png",
+            "ENVIRONMENT": os.getenv(
+                "CYBS_ZANACO_ENVIRONMENT", os.getenv("CYBS_ENVIRONMENT", "test")
+            ),
             "MERCHANT_ID": os.getenv("CYBS_ZANACO_MERCHANT_ID", ""),
             "KEY_ID": os.getenv("CYBS_ZANACO_KEY_ID", ""),
             "SHARED_SECRET": os.getenv("CYBS_ZANACO_SHARED_SECRET", ""),
@@ -203,6 +207,10 @@ CYBERSOURCE = {
         },
         "absa": {
             "LABEL": "Absa",
+            "LOGO": "images/absa-logo.jpg",
+            "ENVIRONMENT": os.getenv(
+                "CYBS_ABSA_ENVIRONMENT", os.getenv("CYBS_ENVIRONMENT", "test")
+            ),
             "MERCHANT_ID": os.getenv("CYBS_ABSA_MERCHANT_ID", ""),
             "KEY_ID": os.getenv("CYBS_ABSA_KEY_ID", ""),
             "SHARED_SECRET": os.getenv("CYBS_ABSA_SHARED_SECRET", ""),

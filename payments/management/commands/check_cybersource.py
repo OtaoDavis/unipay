@@ -29,8 +29,9 @@ class Command(BaseCommand):
 
         self.stdout.write("")
         self.stdout.write(self.style.MIGRATE_HEADING("CyberSource configuration"))
-        self.stdout.write(f"  Environment     : {conf.get('ENVIRONMENT', 'test')}")
-        self.stdout.write(f"  API host        : {cybersource.get_host()}")
+        self.stdout.write(
+            f"  Default/fallback: {conf.get('ENVIRONMENT', 'test')}"
+        )
 
         # A common failure: .env exists but load_dotenv() was never called.
         if not any(
@@ -51,6 +52,8 @@ class Command(BaseCommand):
             if passed:
                 self.stdout.write(
                     f"  {self.style.SUCCESS('PASS')}  {slug:<8} "
+                    f"env={account.environment:<10} "
+                    f"host={account.host:<27} "
                     f"mid={account.merchant_id:<20} "
                     f"key={_mask(account.key_id):<22} "
                     f"secret={_mask(account.shared_secret):<22}"

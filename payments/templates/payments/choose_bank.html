@@ -1,31 +1,52 @@
-{% extends "base.html" %} {% load static %} {% block title %}Choose a Bank |
-Cavendish University Zambia{% endblock %} {% block content %}
-<div class="wide-payment-card">
-  <div class="card-header">
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Choose a Bank | Cavendish University Zambia{% endblock %}
+{% block body_class %}scrollable bank-selection-page{% endblock %}
+
+{% block content %}
+<div class="wide-payment-card bank-selection-shell">
+  <div class="card-header bank-selection-header">
     <img
       src="{% static 'images/cuz_logo.png' %}"
-      alt="CUZ Logo"
+      alt="Cavendish University Zambia"
       class="form-logo"
     />
     <div class="header-text">
       <h1>Student Payment Portal</h1>
-      <p>Choose which bank you'd like to make your payment through.</p>
+      <p>Select the bank you would like to process your payment through.</p>
     </div>
   </div>
 
   <div class="bank-choice-list">
     {% for bank in banks %}
-    <a
-      href="{% url 'payments:payment_form' bank=bank.slug %}"
-      class="bank-choice-card"
-    >
-      <span class="bank-choice-name">{{ bank.label }}</span>
-    </a>
+      <a
+        href="{% url 'payments:payment_form' bank=bank.slug %}"
+        class="bank-choice-card bank-choice-card-{{ bank.slug }}"
+        aria-label="Continue with {{ bank.label }}"
+      >
+        <span class="bank-logo-frame">
+          {% if bank.logo %}
+            <img
+              src="{% static bank.logo %}"
+              alt="{{ bank.label }} logo"
+              class="bank-logo bank-logo-{{ bank.slug }}"
+            />
+          {% endif %}
+        </span>
+        <span class="bank-choice-name">{{ bank.label }}</span>
+        <span class="bank-choice-action">Continue securely <span aria-hidden="true">&rarr;</span></span>
+      </a>
     {% empty %}
-    <p class="form-alert">
-      No payment accounts are configured yet. Please contact the Finance Office.
-    </p>
+      <p class="form-alert">
+        No payment accounts are configured yet. Please contact the Finance Office.
+      </p>
     {% endfor %}
   </div>
+
+  <p class="bank-selection-note">
+    <span aria-hidden="true">&#128274;</span>
+    Your card information is entered securely on the next step.
+  </p>
 </div>
 {% endblock %}

@@ -44,6 +44,7 @@ class MerchantAccount:
     merchant_id: str
     key_id: str
     shared_secret: str
+    environment: str
     host: str
     currencies: tuple = ()
 
@@ -92,12 +93,14 @@ def _config():
         ) from exc
 
 
-def get_host():
-    conf = _config()
-    environment = conf.get("ENVIRONMENT", "test")
+def get_host(environment=None):
+    """Resolve a CyberSource host for one explicit account environment."""
+    if environment is None:
+        environment = _config().get("ENVIRONMENT", "test")
     if environment not in HOSTS:
         raise ImproperlyConfigured(
-            f"CYBS_ENVIRONMENT must be 'test' or 'production', got '{environment}'."
+            "CyberSource environment must be 'test' or 'production', "
+            f"got '{environment}'."
         )
     return HOSTS[environment]
 
@@ -114,13 +117,15 @@ def get_account(slug):
         )
 
     data = accounts[slug]
+    environment = data.get("ENVIRONMENT", conf.get("ENVIRONMENT", "test"))
     return MerchantAccount(
         slug=slug,
         label=data.get("LABEL", slug.title()),
         merchant_id=data.get("MERCHANT_ID", ""),
         key_id=data.get("KEY_ID", ""),
         shared_secret=data.get("SHARED_SECRET", ""),
-        host=get_host(),
+        environment=environment,
+        host=get_host(environment),
         currencies=tuple(data.get("CURRENCIES", ())),
     )
 
@@ -136,6 +141,7 @@ def available_banks():
         {
             "slug": slug,
             "label": data.get("LABEL", slug.title()),
+            "logo": data.get("LOGO", ""),
             "currencies": list(data.get("CURRENCIES", ())),
         }
         for slug, data in accounts.items()
@@ -188,7 +194,7 @@ def _signature_headers(account, method, path, body_bytes):
     the signing string is host/date/(request-target)[/digest]/v-c-merchant-id,
     HMAC-SHA256'd with the base64-decoded shared secret.
     """
-    host = get_host()
+    host = account.host
     date = formatdate(usegmt=True)
     signed = ["host", "date", "(request-target)"]
     lines = [
