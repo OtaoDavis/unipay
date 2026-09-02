@@ -201,6 +201,8 @@ CYBERSOURCE = {
             "MERCHANT_ID": os.getenv("CYBS_ZANACO_MERCHANT_ID", ""),
             "KEY_ID": os.getenv("CYBS_ZANACO_KEY_ID", ""),
             "SHARED_SECRET": os.getenv("CYBS_ZANACO_SHARED_SECRET", ""),
+            # Zanaco's current production approval is Visa-only.
+            "ALLOWED_CARD_NETWORKS": ["VISA"],
             # Currency is NOT tied to a bank -- either bank can settle either
             # currency. This just lists what each one supports.
             "CURRENCIES": ["ZMW", "USD"],
@@ -214,6 +216,7 @@ CYBERSOURCE = {
             "MERCHANT_ID": os.getenv("CYBS_ABSA_MERCHANT_ID", ""),
             "KEY_ID": os.getenv("CYBS_ABSA_KEY_ID", ""),
             "SHARED_SECRET": os.getenv("CYBS_ABSA_SHARED_SECRET", ""),
+            "ALLOWED_CARD_NETWORKS": ["VISA", "MASTERCARD", "AMEX"],
             "CURRENCIES": ["ZMW", "USD"],
         },
     },

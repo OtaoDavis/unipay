@@ -47,6 +47,7 @@ class MerchantAccount:
     environment: str
     host: str
     currencies: tuple = ()
+    allowed_card_networks: tuple = ()
 
     @property
     def base_url(self):
@@ -79,6 +80,11 @@ class MerchantAccount:
             raise ImproperlyConfigured(
                 f"CyberSource account '{self.slug}': shared secret looks too "
                 f"short ({len(decoded)} bytes decoded). It may have been truncated."
+            )
+
+        if not self.allowed_card_networks:
+            raise ImproperlyConfigured(
+                f"CyberSource account '{self.slug}' has no allowed card networks."
             )
 
         return True
@@ -127,6 +133,7 @@ def get_account(slug):
         environment=environment,
         host=get_host(environment),
         currencies=tuple(data.get("CURRENCIES", ())),
+        allowed_card_networks=tuple(data.get("ALLOWED_CARD_NETWORKS", ())),
     )
 
 
@@ -298,7 +305,7 @@ def create_capture_context(payment, target_origin, account):
     payload = {
         "targetOrigins": [target_origin],
         "clientVersion": "0.34",
-        "allowedCardNetworks": ["VISA", "MASTERCARD", "AMEX"],
+        "allowedCardNetworks": list(account.allowed_card_networks),
         "allowedPaymentTypes": ["PANENTRY"],
         "country": "ZM",
         "locale": "en_US",

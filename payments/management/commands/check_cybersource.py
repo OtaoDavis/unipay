@@ -56,7 +56,8 @@ class Command(BaseCommand):
                     f"host={account.host:<27} "
                     f"mid={account.merchant_id:<20} "
                     f"key={_mask(account.key_id):<22} "
-                    f"secret={_mask(account.shared_secret):<22}"
+                    f"secret={_mask(account.shared_secret):<22} "
+                    f"cards={','.join(account.allowed_card_networks)}"
                 )
             else:
                 ok = False
