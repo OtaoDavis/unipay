@@ -10,7 +10,7 @@ STUDENT_ID_RE = re.compile(r"^\d{1,12}$")   # digits only, up to 12
 
 # Minimum and maximum a student may pay in one transaction, per currency.
 AMOUNT_LIMITS = {
-    "ZMW": (Decimal("10.00"), Decimal("500000.00")),
+    "ZMW": (Decimal("1.00"), Decimal("500000.00")),
     "USD": (Decimal("1.00"), Decimal("25000.00")),
 }
 
