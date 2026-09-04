@@ -217,7 +217,7 @@ CYBERSOURCE = {
             "KEY_ID": os.getenv("CYBS_ABSA_KEY_ID", ""),
             "SHARED_SECRET": os.getenv("CYBS_ABSA_SHARED_SECRET", ""),
             "ALLOWED_CARD_NETWORKS": ["VISA", "MASTERCARD", "AMEX"],
-            "CURRENCIES": ["ZMW", "USD"],
+            "CURRENCIES": ["ZMW"],
         },
     },
 }
