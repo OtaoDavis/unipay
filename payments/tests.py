@@ -58,7 +58,7 @@ class ReceiptEmailTests(TestCase):
 
 class CaptureContextTests(TestCase):
     @patch("payments.services.cybersource._call")
-    def test_prefills_stored_email_in_billing_data(self, call):
+    def test_requests_email_in_unified_checkout(self, call):
         call.return_value = SimpleNamespace(status_code=200, text="signed-jwt")
         payment = make_payment()
         account = SimpleNamespace(allowed_card_networks=("VISA",))
@@ -66,5 +66,5 @@ class CaptureContextTests(TestCase):
         create_capture_context(payment, "https://payments.example.com", account)
 
         payload = call.call_args.args[3]
-        self.assertEqual(payload["orderInformation"]["billTo"]["email"], payment.email)
-        self.assertFalse(payload["captureMandate"]["requestEmail"])
+        self.assertTrue(payload["captureMandate"]["requestEmail"])
+        self.assertNotIn("billTo", payload["orderInformation"])
