@@ -1,4 +1,5 @@
 import logging
+from email.message import MIMEPart
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -26,6 +27,19 @@ def send_payment_receipt(payment):
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[payment.email],
     )
+    logo_path = settings.BASE_DIR / "static" / "images" / "cuz_logo.png"
+    if logo_path.exists():
+        logo = MIMEPart()
+        logo.set_content(
+            logo_path.read_bytes(),
+            maintype="image",
+            subtype="png",
+            disposition="inline",
+            filename="cuz-logo.png",
+            cid="<cuz-logo>",
+        )
+        message.attach(logo)
+
     message.attach_alternative(
         render_to_string("payments/email/receipt.html", context), "text/html"
     )

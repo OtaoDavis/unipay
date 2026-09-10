@@ -43,6 +43,8 @@ class ReceiptEmailTests(TestCase):
         self.assertEqual(second.status_code, 200)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ["student@example.com"])
+        self.assertIn("Cavendish University Zambia", mail.outbox[0].alternatives[0].content)
+        self.assertEqual(mail.outbox[0].attachments[0].get("Content-ID"), "<cuz-logo>")
         payment.refresh_from_db()
         self.assertEqual(payment.status, Payment.Status.AUTHORIZED)
         self.assertIsNotNone(payment.receipt_emailed_at)

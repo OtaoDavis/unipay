@@ -1,24 +1,107 @@
 <!doctype html>
 <html lang="en">
-  <body style="margin:0;background:#f3f5f7;font-family:Arial,sans-serif;color:#17202a">
-    <div style="max-width:640px;margin:24px auto;background:#fff;border:1px solid #dde2e7;border-radius:8px;overflow:hidden">
-      <div style="padding:24px;background:#8b1538;color:#fff">
-        <h1 style="margin:0;font-size:22px">Cavendish University Zambia</h1>
-        <p style="margin:6px 0 0">Official online payment receipt</p>
-      </div>
-      <div style="padding:24px">
-        <p style="font-size:18px;margin-top:0"><strong>Payment authorized</strong></p>
-        <table style="width:100%;border-collapse:collapse" role="presentation">
-          <tr><td style="padding:8px 0;color:#64707d">Receipt reference</td><td style="padding:8px 0;text-align:right"><strong>{{ payment.merchant_reference }}</strong></td></tr>
-          <tr><td style="padding:8px 0;color:#64707d">Student</td><td style="padding:8px 0;text-align:right">{{ payment.full_name }}</td></tr>
-          <tr><td style="padding:8px 0;color:#64707d">Student ID</td><td style="padding:8px 0;text-align:right">{{ payment.student_id }}</td></tr>
-          <tr><td style="padding:8px 0;color:#64707d">Purpose</td><td style="padding:8px 0;text-align:right">{{ payment.get_purpose_display }}</td></tr>
-          <tr><td style="padding:8px 0;color:#64707d">Settlement bank</td><td style="padding:8px 0;text-align:right">{{ payment.bank|title }}</td></tr>
-          <tr><td style="padding:8px 0;color:#64707d">Transaction ID</td><td style="padding:8px 0;text-align:right">{{ payment.cybs_transaction_id|default:"Not available" }}</td></tr>
-          <tr><td style="padding:16px 0 8px;border-top:1px solid #dde2e7;font-size:18px"><strong>Amount</strong></td><td style="padding:16px 0 8px;border-top:1px solid #dde2e7;text-align:right;font-size:18px"><strong>{{ payment.currency }} {{ payment.amount }}</strong></td></tr>
-        </table>
-        <p style="margin-bottom:0;color:#64707d;font-size:13px">Electronically generated receipt. Keep the receipt reference when contacting the Finance Office.</p>
-      </div>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Payment receipt {{ payment.merchant_reference }}</title>
+    <style>
+      @media only screen and (max-width: 620px) {
+        .email-shell { width: 100% !important; }
+        .email-pad { padding-left: 20px !important; padding-right: 20px !important; }
+        .header-title { font-size: 21px !important; }
+        .detail-label, .detail-value { display: block !important; width: 100% !important; text-align: left !important; }
+        .detail-value { padding-top: 3px !important; }
+      }
+    </style>
+  </head>
+  <body style="margin:0;padding:0;background-color:#eef2f7;font-family:Arial,Helvetica,sans-serif;color:#17223b;-webkit-text-size-adjust:100%">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">
+      Payment authorized — {{ payment.currency }} {{ payment.amount }} received. Receipt {{ payment.merchant_reference }}.
     </div>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:#eef2f7">
+      <tr>
+        <td align="center" style="padding:32px 12px">
+          <table class="email-shell" role="presentation" width="620" cellspacing="0" cellpadding="0" border="0" style="width:620px;max-width:620px;background-color:#ffffff;border:1px solid #dfe5ee;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(23,38,77,.08)">
+            <tr>
+              <td style="height:6px;background:linear-gradient(90deg,#d9a12e 0 32%,#c71920 32% 66%,#2f5597 66% 100%);font-size:0;line-height:0">&nbsp;</td>
+            </tr>
+            <tr>
+              <td class="email-pad" style="padding:26px 32px;background-color:#213769">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                  <tr>
+                    <td width="78" valign="middle" style="width:78px">
+                      <div style="width:66px;height:66px;background:#ffffff;border-radius:8px;text-align:center;line-height:66px">
+                        <img src="cid:cuz-logo" width="58" height="58" alt="Cavendish University" style="display:inline-block;width:58px;height:58px;vertical-align:middle;border:0">
+                      </div>
+                    </td>
+                    <td valign="middle" style="color:#ffffff">
+                      <h1 class="header-title" style="margin:0;font-size:24px;line-height:30px;font-weight:700">Cavendish University Zambia</h1>
+                      <p style="margin:5px 0 0;font-size:14px;line-height:20px;color:#dce5f5">Official online payment receipt</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="email-pad" style="padding:28px 32px 22px">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#edf8f1;border:1px solid #ccebd8;border-radius:9px">
+                  <tr>
+                    <td width="54" align="center" valign="middle" style="padding:18px 0 18px 18px">
+                      <div style="width:38px;height:38px;border-radius:50%;background:#218653;color:#ffffff;font-size:23px;line-height:38px;text-align:center">&#10003;</div>
+                    </td>
+                    <td style="padding:18px 18px 18px 12px">
+                      <p style="margin:0 0 3px;font-size:18px;line-height:24px;font-weight:700;color:#17633d">Payment authorized</p>
+                      <p style="margin:0;font-size:13px;line-height:19px;color:#47705a">Your card payment was processed successfully.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="email-pad" style="padding:0 32px 24px">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f6f8fc;border-left:4px solid #d9a12e;border-radius:8px">
+                  <tr>
+                    <td style="padding:18px 20px">
+                      <p style="margin:0 0 5px;font-size:12px;line-height:16px;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:#66738a">Amount paid</p>
+                      <p style="margin:0;font-size:30px;line-height:36px;font-weight:700;color:#213769">{{ payment.currency }} {{ payment.amount }}</p>
+                    </td>
+                    <td align="right" valign="middle" style="padding:18px 20px">
+                      <p style="margin:0 0 5px;font-size:12px;line-height:16px;text-transform:uppercase;letter-spacing:.8px;color:#66738a">Receipt reference</p>
+                      <p style="margin:0;font-size:15px;line-height:21px;font-weight:700;color:#17223b">{{ payment.merchant_reference }}</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="email-pad" style="padding:0 32px 30px">
+                <p style="margin:0 0 11px;font-size:14px;line-height:20px;font-weight:700;color:#213769;text-transform:uppercase;letter-spacing:.7px">Payment details</p>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-top:1px solid #e3e8ef">
+                  <tr><td class="detail-label" width="38%" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;color:#66738a">Student name</td><td class="detail-value" align="right" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;font-weight:600;color:#17223b">{{ payment.full_name }}</td></tr>
+                  <tr><td class="detail-label" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;color:#66738a">Student ID</td><td class="detail-value" align="right" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;font-weight:600;color:#17223b">{{ payment.student_id }}</td></tr>
+                  <tr><td class="detail-label" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;color:#66738a">Payment purpose</td><td class="detail-value" align="right" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;font-weight:600;color:#17223b">{{ payment.get_purpose_display }}</td></tr>
+                  <tr><td class="detail-label" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;color:#66738a">Settlement bank</td><td class="detail-value" align="right" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;font-weight:600;color:#17223b">{{ payment.bank|title }}</td></tr>
+                  <tr><td class="detail-label" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;color:#66738a">Payment date</td><td class="detail-value" align="right" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;font-weight:600;color:#17223b">{{ payment.updated_at|date:"d M Y, H:i T" }}</td></tr>
+                  <tr><td class="detail-label" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;color:#66738a">Transaction ID</td><td class="detail-value" align="right" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:13px;font-weight:600;color:#17223b;word-break:break-all">{{ payment.cybs_transaction_id|default:"Not available" }}</td></tr>
+                  {% if payment.cybs_reconciliation_id %}<tr><td class="detail-label" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:14px;color:#66738a">Reconciliation ID</td><td class="detail-value" align="right" style="padding:12px 0;border-bottom:1px solid #e8ecf2;font-size:13px;font-weight:600;color:#17223b;word-break:break-all">{{ payment.cybs_reconciliation_id }}</td></tr>{% endif %}
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="email-pad" style="padding:22px 32px;background:#f7f9fc;border-top:1px solid #e3e8ef;text-align:center">
+                <p style="margin:0 0 6px;font-size:13px;line-height:19px;font-weight:700;color:#213769">Electronically generated official receipt</p>
+                <p style="margin:0;font-size:12px;line-height:18px;color:#738095">Keep this receipt reference when contacting the Finance Office. No card details are stored in this email.</p>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:14px 0 0;font-size:11px;line-height:17px;color:#8792a5;text-align:center">Cavendish University Zambia &bull; Student Payment Portal</p>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
