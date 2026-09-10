@@ -13,6 +13,7 @@ from .forms import PaymentDetailsForm
 from .models import Payment
 from .services import cybersource
 from .services.cybersource import CyberSourceError
+from .services.receipts import send_payment_receipt
 
 logger = logging.getLogger(__name__)
 
@@ -200,7 +201,7 @@ def complete_payment(request, reference):
         Payment.Status.AUTHORIZED if status in AUTHORIZED_STATUSES else Payment.Status.DECLINED
     )
     details = result.get("details") if isinstance(result.get("details"), dict) else {}
-    Payment.objects.filter(
+    payment_updated = Payment.objects.filter(
         pk=payment.pk,
         status__in=[
             Payment.Status.PENDING,
@@ -216,6 +217,10 @@ def complete_payment(request, reference):
         status=new_status,
         updated_at=timezone.now(),
     )
+
+    if payment_updated and new_status == Payment.Status.AUTHORIZED:
+        payment.refresh_from_db()
+        send_payment_receipt(payment)
 
     return JsonResponse(
         {"redirect": reverse("payments:receipt", args=[payment.reference])}

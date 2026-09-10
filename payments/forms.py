@@ -24,6 +24,7 @@ class PaymentDetailsForm(forms.ModelForm):
         fields = [
             "first_name",
             "last_name",
+            "email",
             "student_id",
             "purpose",
             "amount",
@@ -35,6 +36,9 @@ class PaymentDetailsForm(forms.ModelForm):
             ),
             "last_name": forms.TextInput(
                 attrs={"placeholder": "Enter last name", "autocomplete": "family-name"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"placeholder": "Enter email address", "autocomplete": "email"}
             ),
             "student_id": forms.TextInput(
                 attrs={"placeholder": "Enter Your Student ID", "autocapitalize": "characters"}
@@ -48,6 +52,7 @@ class PaymentDetailsForm(forms.ModelForm):
 
     def __init__(self, *args, currencies=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["email"].required = True
 
         # Currency options are scoped to whichever bank the student already
         # picked -- passed in by the view, not tied to the model globally.
@@ -80,6 +85,9 @@ class PaymentDetailsForm(forms.ModelForm):
 
     def clean_last_name(self):
         return self.cleaned_data["last_name"].strip()
+
+    def clean_email(self):
+        return self.cleaned_data["email"].strip().lower()
 
     def clean(self):
         cleaned = super().clean()

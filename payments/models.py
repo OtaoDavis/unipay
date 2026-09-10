@@ -30,6 +30,7 @@ class Payment(models.Model):
 
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    email = models.EmailField(blank=True, default="")
     student_id = models.CharField(max_length=32, db_index=True)
     purpose = models.CharField(max_length=32, choices=Purpose.choices)
 
@@ -52,6 +53,7 @@ class Payment(models.Model):
     cybs_transaction_id = models.CharField(max_length=64, blank=True, db_index=True)
     cybs_reconciliation_id = models.CharField(max_length=64, blank=True)
     cybs_response_code = models.CharField(max_length=64, blank=True)
+    receipt_emailed_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

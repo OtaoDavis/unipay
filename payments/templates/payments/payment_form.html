@@ -46,6 +46,14 @@ Portal | Cavendish University Zambia{% endblock %} {% block content %}
     </div>
 
     <div class="form-group">
+      <label for="{{ form.email.id_for_label }}">Email address</label>
+      {{ form.email }} {% for error in form.email.errors %}
+      <p class="field-error">{{ error }}</p>
+      {% endfor %}
+      <p class="field-help">Your payment receipt will be sent to this address.</p>
+    </div>
+
+    <div class="form-group">
       <label for="{{ form.student_id.id_for_label }}">Student ID Number</label>
       {{ form.student_id }} {% for error in form.student_id.errors %}
       <p class="field-error">{{ error }}</p>

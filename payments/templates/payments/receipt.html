@@ -46,6 +46,10 @@
           <dd>{{ payment.student_id }}</dd>
         </div>
         <div>
+          <dt>Email</dt>
+          <dd>{{ payment.email|default:"Not provided" }}</dd>
+        </div>
+        <div>
           <dt>Payment purpose</dt>
           <dd>{{ payment.get_purpose_display }}</dd>
         </div>
@@ -90,6 +94,10 @@
       We could not confirm this payment attempt. It has been closed and will
       not be reused. Start a new payment below to try again.
     </p>
+  {% endif %}
+
+  {% if payment.status == "AUTHORIZED" and payment.receipt_emailed_at %}
+    <p class="receipt-message">A copy of this receipt was emailed to {{ payment.email }}.</p>
   {% endif %}
 
   <div class="action-area receipt-actions">

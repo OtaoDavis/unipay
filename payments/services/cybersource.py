@@ -311,7 +311,8 @@ def create_capture_context(payment, target_origin, account):
         "locale": "en_US",
         "captureMandate": {
             "billingType": "FULL",
-            "requestEmail": True,
+            # Email is collected by the student form and prefilled below.
+            "requestEmail": False,
             "requestPhone": False,
             "requestShipping": False,
             "showAcceptedNetworkIcons": True,
@@ -320,7 +321,12 @@ def create_capture_context(payment, target_origin, account):
             "amountDetails": {
                 "totalAmount": str(payment.amount),
                 "currency": payment.currency,
-            }
+            },
+            "billTo": {
+                "firstName": payment.first_name,
+                "lastName": payment.last_name,
+                "email": payment.email,
+            },
         },
         "completeMandate": {
             "type": "CAPTURE",

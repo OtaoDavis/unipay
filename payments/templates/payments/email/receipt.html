@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <body style="margin:0;background:#f3f5f7;font-family:Arial,sans-serif;color:#17202a">
+    <div style="max-width:640px;margin:24px auto;background:#fff;border:1px solid #dde2e7;border-radius:8px;overflow:hidden">
+      <div style="padding:24px;background:#8b1538;color:#fff">
+        <h1 style="margin:0;font-size:22px">Cavendish University Zambia</h1>
+        <p style="margin:6px 0 0">Official online payment receipt</p>
+      </div>
+      <div style="padding:24px">
+        <p style="font-size:18px;margin-top:0"><strong>Payment authorized</strong></p>
+        <table style="width:100%;border-collapse:collapse" role="presentation">
+          <tr><td style="padding:8px 0;color:#64707d">Receipt reference</td><td style="padding:8px 0;text-align:right"><strong>{{ payment.merchant_reference }}</strong></td></tr>
+          <tr><td style="padding:8px 0;color:#64707d">Student</td><td style="padding:8px 0;text-align:right">{{ payment.full_name }}</td></tr>
+          <tr><td style="padding:8px 0;color:#64707d">Student ID</td><td style="padding:8px 0;text-align:right">{{ payment.student_id }}</td></tr>
+          <tr><td style="padding:8px 0;color:#64707d">Purpose</td><td style="padding:8px 0;text-align:right">{{ payment.get_purpose_display }}</td></tr>
+          <tr><td style="padding:8px 0;color:#64707d">Settlement bank</td><td style="padding:8px 0;text-align:right">{{ payment.bank|title }}</td></tr>
+          <tr><td style="padding:8px 0;color:#64707d">Transaction ID</td><td style="padding:8px 0;text-align:right">{{ payment.cybs_transaction_id|default:"Not available" }}</td></tr>
+          <tr><td style="padding:16px 0 8px;border-top:1px solid #dde2e7;font-size:18px"><strong>Amount</strong></td><td style="padding:16px 0 8px;border-top:1px solid #dde2e7;text-align:right;font-size:18px"><strong>{{ payment.currency }} {{ payment.amount }}</strong></td></tr>
+        </table>
+        <p style="margin-bottom:0;color:#64707d;font-size:13px">Electronically generated receipt. Keep the receipt reference when contacting the Finance Office.</p>
+      </div>
+    </div>
+  </body>
+</html>
