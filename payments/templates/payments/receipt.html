@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Payment Receipt | Cavendish University Zambia{% endblock %}
+{% block title %}Payment Confirmation | Cavendish University Zambia{% endblock %}
 {% block body_class %}scrollable receipt-page{% endblock %}
 
 {% block content %}
@@ -12,11 +12,11 @@
         <img src="{% static 'images/cuz_logo.png' %}" alt="Cavendish University Zambia" />
         <div>
           <h1>Cavendish University Zambia</h1>
-          <p>Official online payment receipt</p>
+          <p>Online payment confirmation</p>
         </div>
       </div>
       <div class="receipt-number">
-        <span>Receipt reference</span>
+        <span>Payment reference</span>
         <strong>{{ payment.merchant_reference }}</strong>
       </div>
     </header>
@@ -83,8 +83,8 @@
     <footer class="receipt-footer">
       <span class="receipt-footer-mark" aria-hidden="true">&#10003;</span>
       <div>
-        <strong>Electronically generated receipt</strong>
-        <p>Keep the receipt reference when contacting the Finance Office.</p>
+        <strong>Online payment confirmation</strong>
+        <p>This is not an official university receipt. Contact the Finance Office if you require one.</p>
       </div>
     </footer>
   </article>
@@ -97,7 +97,7 @@
   {% endif %}
 
   {% if payment.status == "AUTHORIZED" and payment.receipt_emailed_at %}
-    <p class="receipt-message">A copy of this receipt was emailed to {{ payment.email }}.</p>
+    <p class="receipt-message">A payment confirmation was emailed to {{ payment.email }}.</p>
   {% endif %}
 
   <div class="action-area receipt-actions">
@@ -107,7 +107,7 @@
       </a>
     {% else %}
       <button type="button" class="pay-btn" onclick="window.print()">
-        Print or save as PDF
+        Print or save confirmation
       </button>
       <a class="back-link" href="{% url 'payments:choose_bank' %}">&larr; Make another payment</a>
     {% endif %}

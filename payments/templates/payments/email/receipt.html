@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Payment receipt {{ payment.merchant_reference }}</title>
+    <title>Payment confirmation {{ payment.merchant_reference }}</title>
     <style>
       @media only screen and (max-width: 620px) {
         .email-shell { width: 100% !important; }
@@ -16,7 +16,7 @@
   </head>
   <body style="margin:0;padding:0;background-color:#eef2f7;font-family:Arial,Helvetica,sans-serif;color:#17223b;-webkit-text-size-adjust:100%">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">
-      Payment authorized — {{ payment.currency }} {{ payment.amount }} received. Receipt {{ payment.merchant_reference }}.
+      Payment authorized — {{ payment.currency }} {{ payment.amount }}. Reference {{ payment.merchant_reference }}.
     </div>
 
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:#eef2f7">
@@ -37,7 +37,7 @@
                     </td>
                     <td valign="middle" style="color:#ffffff">
                       <h1 class="header-title" style="margin:0;font-size:24px;line-height:30px;font-weight:700">Cavendish University Zambia</h1>
-                      <p style="margin:5px 0 0;font-size:14px;line-height:20px;color:#dce5f5">Official online payment receipt</p>
+                      <p style="margin:5px 0 0;font-size:14px;line-height:20px;color:#dce5f5">Online payment confirmation</p>
                     </td>
                   </tr>
                 </table>
@@ -65,11 +65,11 @@
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f6f8fc;border-left:4px solid #d9a12e;border-radius:8px">
                   <tr>
                     <td style="padding:18px 20px">
-                      <p style="margin:0 0 5px;font-size:12px;line-height:16px;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:#66738a">Amount paid</p>
+                      <p style="margin:0 0 5px;font-size:12px;line-height:16px;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:#66738a">Amount authorized</p>
                       <p style="margin:0;font-size:30px;line-height:36px;font-weight:700;color:#213769">{{ payment.currency }} {{ payment.amount }}</p>
                     </td>
                     <td align="right" valign="middle" style="padding:18px 20px">
-                      <p style="margin:0 0 5px;font-size:12px;line-height:16px;text-transform:uppercase;letter-spacing:.8px;color:#66738a">Receipt reference</p>
+                      <p style="margin:0 0 5px;font-size:12px;line-height:16px;text-transform:uppercase;letter-spacing:.8px;color:#66738a">Payment reference</p>
                       <p style="margin:0;font-size:15px;line-height:21px;font-weight:700;color:#17223b">{{ payment.merchant_reference }}</p>
                     </td>
                   </tr>
@@ -94,8 +94,8 @@
 
             <tr>
               <td class="email-pad" style="padding:22px 32px;background:#f7f9fc;border-top:1px solid #e3e8ef;text-align:center">
-                <p style="margin:0 0 6px;font-size:13px;line-height:19px;font-weight:700;color:#213769">Electronically generated official receipt</p>
-                <p style="margin:0;font-size:12px;line-height:18px;color:#738095">Keep this receipt reference when contacting the Finance Office. No card details are stored in this email.</p>
+                <p style="margin:0 0 6px;font-size:13px;line-height:19px;font-weight:700;color:#213769">Online payment confirmation</p>
+                <p style="margin:0;font-size:12px;line-height:18px;color:#738095">This confirmation is not an official university receipt. Contact the Finance Office if you require an official receipt and quote the payment reference above.</p>
               </td>
             </tr>
           </table>

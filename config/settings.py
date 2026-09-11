@@ -146,7 +146,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 TIME_ZONE = 'Africa/Lusaka' 
 
 # Email. The console backend is safe for development; configure the SMTP
-# variables in production to deliver receipts to students.
+# variables in production to deliver payment confirmations to students.
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
 )

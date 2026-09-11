@@ -1,8 +1,8 @@
 Cavendish University Zambia
-Payment receipt
+Payment confirmation
 
 Payment status: {{ payment.get_status_display }}
-Receipt reference: {{ payment.merchant_reference }}
+Payment reference: {{ payment.merchant_reference }}
 Transaction ID: {{ payment.cybs_transaction_id|default:"Not available" }}
 Student: {{ payment.full_name }}
 Student ID: {{ payment.student_id }}
@@ -11,5 +11,6 @@ Amount: {{ payment.currency }} {{ payment.amount }}
 Settlement bank: {{ payment.bank|title }}
 Payment date: {{ payment.updated_at|date:"d M Y, H:i T" }}
 
-This is an electronically generated receipt. Keep the receipt reference when
-contacting the Finance Office.
+This message confirms that the online payment was processed successfully.
+It is not an official university receipt. Contact the Finance Office if you
+require an official receipt, and quote the payment reference above.

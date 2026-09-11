@@ -22,7 +22,7 @@ def send_payment_receipt(payment):
 
     context = {"payment": payment}
     message = EmailMultiAlternatives(
-        subject=f"Payment receipt {payment.merchant_reference}",
+        subject=f"Payment confirmation {payment.merchant_reference}",
         body=render_to_string("payments/email/receipt.txt", context),
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[payment.email],
@@ -48,7 +48,7 @@ def send_payment_receipt(payment):
         message.send(fail_silently=False)
     except Exception:
         logger.exception(
-            "Could not email receipt for payment %s", payment.merchant_reference
+            "Could not email payment confirmation for %s", payment.merchant_reference
         )
         return False
 
